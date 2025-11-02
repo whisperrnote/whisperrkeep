@@ -18,7 +18,7 @@ export default function MasterpassResetPage() {
   // Redirect to login if not logged in
   useEffect(() => {
     if (!user) {
-      router.replace("/login");
+      router.replace("/auth");
     }
   }, [user, router]);
 

@@ -40,7 +40,7 @@ export function useFinalizeAuth() {
         })());
       // If no user after refresh, go to fallback/login
       if (!u) {
-        router.replace(options.fallback || "/login");
+        router.replace(options.fallback || "/auth");
         return;
       }
       // Check masterpass and vault
