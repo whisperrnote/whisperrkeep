@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 
 // Pages that should use the simplified layout (no sidebar/header)
-const SIMPLIFIED_LAYOUT_PATHS = ["/", "/login", "/register", "/reset-password"];
+const SIMPLIFIED_LAYOUT_PATHS = ["/", "/auth"];
 
 interface HeaderProps {
   onMenuClick: () => void;

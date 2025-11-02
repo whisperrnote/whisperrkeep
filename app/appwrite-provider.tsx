@@ -173,7 +173,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
   // Password reset flow (from old provider)
   const forgotPassword = async (email: string) => {
     // Assumes you have a getRedirectUrl util
-    const getRedirectUrl = () => window.location.origin + "/login";
+    const getRedirectUrl = () => window.location.origin + "/auth";
     await appwriteAccount.createRecovery(email, getRedirectUrl());
   };
 
