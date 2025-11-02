@@ -1,4 +1,8 @@
-l# 🔐 Whisperrauth
+# 🔐 Whisperrauth
+
+[![CI](https://github.com/whisperrnote/pass/actions/workflows/ci.yml/badge.svg)](https://github.com/whisperrnote/pass/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/whisperrnote/pass/actions/workflows/codeql.yml/badge.svg)](https://github.com/whisperrnote/pass/actions/workflows/codeql.yml)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://whisperrnote.github.io/pass/)
 
 Welcome to **Whisperrauth** – your next-generation, zero-knowledge password manager built with security, privacy, and usability at its core! 🚀
 
@@ -72,6 +76,64 @@ Visit [http://localhost:3000](http://localhost:3000) to view the app.
   ├── public/             # Static assets
   ├── env.sample          # Sample environment variables
   └── README.md           # This file!
+```
+
+---
+
+## 🧪 Testing & CI/CD
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Run tests in watch mode
+npm test -- --watch
+```
+
+### CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- **Lint**: Runs ESLint on every push and pull request
+- **Test**: Executes the full test suite with coverage reporting
+- **Build**: Validates that the application builds successfully
+- **Security**: 
+  - CodeQL analysis for vulnerability detection
+  - Trivy scanning for dependencies
+  - npm audit for known vulnerabilities
+- **Documentation**: Auto-deploys docs to GitHub Pages on main branch
+
+View the [CI/CD workflows](.github/workflows/) for more details.
+
+### Test Coverage
+
+Current test coverage includes:
+- Password generation utilities
+- Validation functions (email, password, URLs, etc.)
+- Security utilities (constant-time comparison, data clearing)
+
+Coverage reports are generated in the `coverage/` directory.
+
+---
+
+## 📚 Documentation
+
+Comprehensive documentation is available at [https://whisperrnote.github.io/pass/](https://whisperrnote.github.io/pass/)
+
+- **Getting Started**: Installation and setup guide
+- **Architecture**: System design and components
+- **Security**: Encryption model and best practices  
+- **API Reference**: Complete API documentation
+
+To view documentation locally:
+```bash
+cd docs
+python3 -m http.server 8080
 ```
 
 ---
