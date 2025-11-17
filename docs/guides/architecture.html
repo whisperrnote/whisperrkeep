@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - Whisperrauth Documentation</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo">🔐</span>
+                <h1>Whisperrauth Docs</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="getting-started.html">Getting Started</a></li>
+                <li><a href="architecture.html" class="active">Architecture</a></li>
+                <li><a href="security.html">Security</a></li>
+                <li><a href="../api/index.html">API</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-content">
+        <h1>🏗️ Architecture</h1>
+        <p>Understand the system design and components of Whisperrauth.</p>
+
+        <h2>Overview</h2>
+        <p>Whisperrauth is built with a modern stack focusing on security, performance, and user experience. The application follows a zero-knowledge architecture where all encryption happens on the client side.</p>
+
+        <h2>Technology Stack</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Technology</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Frontend</td>
+                    <td>Next.js 15 + React 19</td>
+                    <td>UI framework with server-side rendering</td>
+                </tr>
+                <tr>
+                    <td>Language</td>
+                    <td>TypeScript</td>
+                    <td>Type-safe development</td>
+                </tr>
+                <tr>
+                    <td>Styling</td>
+                    <td>Tailwind CSS v4</td>
+                    <td>Utility-first CSS framework</td>
+                </tr>
+                <tr>
+                    <td>Backend</td>
+                    <td>Appwrite</td>
+                    <td>Authentication and data storage</td>
+                </tr>
+                <tr>
+                    <td>Database</td>
+                    <td>RxDB</td>
+                    <td>Client-side reactive database</td>
+                </tr>
+                <tr>
+                    <td>Encryption</td>
+                    <td>Web Crypto API</td>
+                    <td>AES-256-GCM encryption</td>
+                </tr>
+                <tr>
+                    <td>2FA</td>
+                    <td>otplib</td>
+                    <td>TOTP code generation</td>
+                </tr>
+                <tr>
+                    <td>WebAuthn</td>
+                    <td>@simplewebauthn</td>
+                    <td>Biometric authentication</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>System Architecture</h2>
+
+        <h3>Client-Side Architecture</h3>
+        <pre><code>┌─────────────────────────────────────────┐
+│          User Interface (React)         │
+├─────────────────────────────────────────┤
+│     State Management & Providers        │
+├─────────────────────────────────────────┤
+│        Encryption Layer (Web Crypto)    │
+├─────────────────────────────────────────┤
+│     Local Storage (RxDB + IndexedDB)    │
+├─────────────────────────────────────────┤
+│       Sync Layer (Appwrite SDK)         │
+└─────────────────────────────────────────┘
+                    ↕
+┌─────────────────────────────────────────┐
+│          Appwrite Backend               │
+│  (Authentication + Encrypted Storage)   │
+└─────────────────────────────────────────┘</code></pre>
+
+        <h3>Key Components</h3>
+
+        <h4>1. Authentication Layer</h4>
+        <ul>
+            <li><strong>Email/Password:</strong> Traditional authentication with Appwrite</li>
+            <li><strong>Magic Links:</strong> Passwordless authentication via email</li>
+            <li><strong>OTP:</strong> One-time password verification</li>
+            <li><strong>WebAuthn:</strong> Biometric authentication support</li>
+            <li><strong>2FA:</strong> TOTP-based two-factor authentication</li>
+        </ul>
+
+        <h4>2. Encryption Layer</h4>
+        <ul>
+            <li><strong>Master Key Derivation:</strong> PBKDF2 with 200,000 iterations</li>
+            <li><strong>Data Encryption:</strong> AES-256-GCM for all sensitive data</li>
+            <li><strong>Salt Generation:</strong> 256-bit random salt per user</li>
+            <li><strong>IV Generation:</strong> Unique initialization vector per encryption</li>
+        </ul>
+
+        <h4>3. Storage Layer</h4>
+        <ul>
+            <li><strong>Local Storage:</strong> RxDB with IndexedDB for offline support</li>
+            <li><strong>Remote Storage:</strong> Appwrite database for sync</li>
+            <li><strong>Conflict Resolution:</strong> Last-write-wins strategy</li>
+        </ul>
+
+        <h2>Data Flow</h2>
+
+        <h3>Password Storage Flow</h3>
+        <pre><code>1. User enters password ──→ 2. Encrypt with master key
+                                          ↓
+5. Sync to Appwrite ←── 4. Store in RxDB ←── 3. Generate IV + encrypt
+                                          ↓
+                            6. Store encrypted data only</code></pre>
+
+        <h3>Password Retrieval Flow</h3>
+        <pre><code>1. Fetch from RxDB/Appwrite ──→ 2. Check if data exists
+                                           ↓
+                                    3. Decrypt with master key
+                                           ↓
+                                    4. Display to user</code></pre>
+
+        <h2>Project Structure</h2>
+        <pre><code>/
+├── app/                    # Next.js app directory
+│   ├── (protected)/       # Protected routes (requires auth)
+│   │   ├── masterpass/    # Master password management
+│   │   ├── overview/      # Main dashboard
+│   │   ├── settings/      # User settings
+│   │   ├── sharing/       # Password sharing features
+│   │   └── totp/          # TOTP management
+│   ├── login/             # Login page
+│   ├── register/          # Registration page
+│   ├── reset-password/    # Password reset
+│   ├── verify-email/      # Email verification
+│   └── layout.tsx         # Root layout
+├── components/            # Reusable UI components
+│   ├── app/              # Application-specific components
+│   ├── layout/           # Layout components
+│   ├── overlays/         # Modals and overlays
+│   └── ui/               # Generic UI components
+├── lib/                  # Core utilities
+│   ├── appwrite.ts       # Appwrite client configuration
+│   ├── security.ts       # Encryption functions
+│   ├── validation.ts     # Input validation
+│   └── utils.ts          # Helper functions
+├── utils/                # Additional utilities
+│   └── password.ts       # Password generation
+├── types/                # TypeScript type definitions
+└── public/               # Static assets</code></pre>
+
+        <h2>Database Schema</h2>
+
+        <h3>Users Collection</h3>
+        <pre><code>{
+  "$id": "unique_user_id",
+  "userId": "appwrite_user_id",
+  "email": "user@example.com",
+  "encryptedMasterKey": "encrypted_key_data",
+  "salt": "256_bit_salt",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}</code></pre>
+
+        <h3>Passwords Collection</h3>
+        <pre><code>{
+  "$id": "unique_password_id",
+  "userId": "appwrite_user_id",
+  "encryptedData": "encrypted_password_object",
+  "iv": "initialization_vector",
+  "title": "Website/Service Name",
+  "category": "personal|work|finance",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}</code></pre>
+
+        <div class="alert alert-info">
+            <strong>Note:</strong> All sensitive data (passwords, usernames, notes) is encrypted within the <code>encryptedData</code> field. Only the title and category are stored in plaintext for searching and filtering.
+        </div>
+
+        <h2>Security Boundaries</h2>
+
+        <h3>Client-Side (Trusted)</h3>
+        <ul>
+            <li>Master password handling</li>
+            <li>Encryption/decryption operations</li>
+            <li>Key derivation</li>
+            <li>Plaintext password access</li>
+        </ul>
+
+        <h3>Server-Side (Zero-Knowledge)</h3>
+        <ul>
+            <li>Stores only encrypted data</li>
+            <li>Handles authentication</li>
+            <li>Manages sync operations</li>
+            <li>Cannot decrypt user data</li>
+        </ul>
+
+        <h2>Performance Considerations</h2>
+
+        <h3>Encryption Performance</h3>
+        <ul>
+            <li><strong>Key Derivation:</strong> ~100-200ms (one-time per session)</li>
+            <li><strong>Encryption:</strong> ~1-3ms per operation</li>
+            <li><strong>Decryption:</strong> ~1-3ms per operation</li>
+            <li><strong>Memory Overhead:</strong> ~1KB per encrypted field</li>
+        </ul>
+
+        <h3>Optimization Strategies</h3>
+        <ul>
+            <li>Master key cached in memory during session</li>
+            <li>RxDB for instant local access</li>
+            <li>Background sync with Appwrite</li>
+            <li>Lazy loading of encrypted data</li>
+            <li>Auto-lock after inactivity</li>
+        </ul>
+
+        <h2>Scalability</h2>
+
+        <h3>Client-Side Limits</h3>
+        <ul>
+            <li><strong>IndexedDB:</strong> ~50MB typical, browser-dependent</li>
+            <li><strong>Concurrent Operations:</strong> Optimized for single-user access</li>
+            <li><strong>Sync Performance:</strong> Efficient for thousands of passwords</li>
+        </ul>
+
+        <h3>Server-Side Limits</h3>
+        <ul>
+            <li>Appwrite handles scaling automatically</li>
+            <li>Document-level permissions for security</li>
+            <li>Rate limiting to prevent abuse</li>
+        </ul>
+
+        <h2>Offline Support</h2>
+        <p>Whisperrauth works offline using RxDB:</p>
+        <ul>
+            <li>All passwords cached locally</li>
+            <li>Full CRUD operations work offline</li>
+            <li>Automatic sync when connection restored</li>
+            <li>Conflict resolution on sync</li>
+        </ul>
+
+        <h2>Extension Architecture</h2>
+        <p>Future browser extension will follow the same principles:</p>
+        <ul>
+            <li>Shared encryption logic</li>
+            <li>Content scripts for auto-fill</li>
+            <li>Background service worker for sync</li>
+            <li>Message passing with main app</li>
+        </ul>
+
+        <h2>Next Steps</h2>
+        <ul>
+            <li>Learn about our <a href="security.html">Security Model</a></li>
+            <li>Explore the <a href="../api/index.html">API Reference</a></li>
+            <li>Contribute on <a href="https://github.com/whisperrnote/pass" target="_blank">GitHub</a></li>
+        </ul>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Whisperrauth. <a href="https://github.com/whisperrnote/pass">View on GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

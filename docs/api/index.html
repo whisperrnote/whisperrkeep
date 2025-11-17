@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - Whisperrauth Documentation</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo">🔐</span>
+                <h1>Whisperrauth Docs</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../guides/getting-started.html">Getting Started</a></li>
+                <li><a href="../guides/architecture.html">Architecture</a></li>
+                <li><a href="../guides/security.html">Security</a></li>
+                <li><a href="index.html" class="active">API</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-content">
+        <h1>📚 API Reference</h1>
+        <p>Comprehensive API documentation for Whisperrauth utilities and functions.</p>
+
+        <h2>Encryption API</h2>
+
+        <h3>deriveKey()</h3>
+        <p>Derives an encryption key from a master password using PBKDF2.</p>
+
+        <pre><code>async function deriveKey(
+  password: string,
+  salt: Uint8Array
+): Promise&lt;CryptoKey&gt;</code></pre>
+
+        <h4>Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>password</td>
+                    <td>string</td>
+                    <td>The master password</td>
+                </tr>
+                <tr>
+                    <td>salt</td>
+                    <td>Uint8Array</td>
+                    <td>256-bit cryptographic salt</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Returns</h4>
+        <p><code>Promise&lt;CryptoKey&gt;</code> - The derived encryption key</p>
+
+        <h4>Example</h4>
+        <pre><code>import { deriveKey } from '@/lib/security';
+
+const salt = crypto.getRandomValues(new Uint8Array(32));
+const key = await deriveKey('my-master-password', salt);</code></pre>
+
+        <h3>encrypt()</h3>
+        <p>Encrypts data using AES-256-GCM.</p>
+
+        <pre><code>async function encrypt(
+  data: string,
+  key: CryptoKey
+): Promise&lt;{
+  encryptedData: string;
+  iv: string;
+}&gt;</code></pre>
+
+        <h4>Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>data</td>
+                    <td>string</td>
+                    <td>The plaintext data to encrypt</td>
+                </tr>
+                <tr>
+                    <td>key</td>
+                    <td>CryptoKey</td>
+                    <td>The encryption key (from deriveKey)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Returns</h4>
+        <p>Promise with encrypted data and initialization vector</p>
+
+        <h4>Example</h4>
+        <pre><code>const { encryptedData, iv } = await encrypt(
+  'my-secret-password',
+  key
+);</code></pre>
+
+        <h3>decrypt()</h3>
+        <p>Decrypts AES-256-GCM encrypted data.</p>
+
+        <pre><code>async function decrypt(
+  encryptedData: string,
+  iv: string,
+  key: CryptoKey
+): Promise&lt;string&gt;</code></pre>
+
+        <h4>Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>encryptedData</td>
+                    <td>string</td>
+                    <td>Base64-encoded encrypted data</td>
+                </tr>
+                <tr>
+                    <td>iv</td>
+                    <td>string</td>
+                    <td>Base64-encoded initialization vector</td>
+                </tr>
+                <tr>
+                    <td>key</td>
+                    <td>CryptoKey</td>
+                    <td>The decryption key</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Returns</h4>
+        <p><code>Promise&lt;string&gt;</code> - The decrypted plaintext</p>
+
+        <h4>Example</h4>
+        <pre><code>const plaintext = await decrypt(
+  encryptedData,
+  iv,
+  key
+);</code></pre>
+
+        <div class="alert alert-warning">
+            <strong>Security Note:</strong> These functions should only be called in secure contexts (HTTPS). Never log or expose keys or plaintext data.
+        </div>
+
+        <h2>Password Generation API</h2>
+
+        <h3>generateRandomPassword()</h3>
+        <p>Generates a cryptographically secure random password.</p>
+
+        <pre><code>function generateRandomPassword(
+  length?: number,
+  options?: PasswordOptions | string
+): string</code></pre>
+
+        <h4>Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Default</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>length</td>
+                    <td>number</td>
+                    <td>16</td>
+                    <td>Password length (12-128)</td>
+                </tr>
+                <tr>
+                    <td>options</td>
+                    <td>PasswordOptions | string</td>
+                    <td>-</td>
+                    <td>Generation options or custom charset</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>PasswordOptions</h4>
+        <pre><code>interface PasswordOptions {
+  strength?: 'strong' | 'alphanumeric';
+  charset?: string;
+}</code></pre>
+
+        <h4>Returns</h4>
+        <p><code>string</code> - The generated password</p>
+
+        <h4>Examples</h4>
+        <pre><code>// Generate strong 20-character password
+const pwd1 = generateRandomPassword(20);
+
+// Generate alphanumeric password
+const pwd2 = generateRandomPassword(16, { 
+  strength: 'alphanumeric' 
+});
+
+// Custom charset
+const pwd3 = generateRandomPassword(16, { 
+  charset: 'abc123' 
+});
+
+// Backward compatible with charset string
+const pwd4 = generateRandomPassword(16, 'abc123');</code></pre>
+
+        <h4>Throws</h4>
+        <ul>
+            <li><code>Error</code> - If length < 12 or > 128</li>
+        </ul>
+
+        <h2>Validation API</h2>
+
+        <h3>validateEmail()</h3>
+        <p>Validates an email address format.</p>
+
+        <pre><code>function validateEmail(email: string): boolean</code></pre>
+
+        <h4>Example</h4>
+        <pre><code>if (!validateEmail(userEmail)) {
+  throw new Error('Invalid email format');
+}</code></pre>
+
+        <h3>validatePasswordStrength()</h3>
+        <p>Checks if a password meets strength requirements.</p>
+
+        <pre><code>function validatePasswordStrength(
+  password: string
+): {
+  isValid: boolean;
+  score: number;
+  feedback: string[];
+}</code></pre>
+
+        <h4>Returns</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>isValid</td>
+                    <td>boolean</td>
+                    <td>Whether password meets minimum requirements</td>
+                </tr>
+                <tr>
+                    <td>score</td>
+                    <td>number</td>
+                    <td>Strength score (0-100)</td>
+                </tr>
+                <tr>
+                    <td>feedback</td>
+                    <td>string[]</td>
+                    <td>Suggestions for improvement</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Example</h4>
+        <pre><code>const result = validatePasswordStrength('MyP@ssw0rd123');
+if (!result.isValid) {
+  console.log('Weak password:', result.feedback);
+}</code></pre>
+
+        <h2>TOTP API</h2>
+
+        <h3>generateTOTPSecret()</h3>
+        <p>Generates a new TOTP secret for 2FA setup.</p>
+
+        <pre><code>function generateTOTPSecret(): string</code></pre>
+
+        <h4>Returns</h4>
+        <p><code>string</code> - Base32-encoded secret</p>
+
+        <h4>Example</h4>
+        <pre><code>const secret = generateTOTPSecret();
+// Use with QR code for user to scan</code></pre>
+
+        <h3>verifyTOTPToken()</h3>
+        <p>Verifies a TOTP token against a secret.</p>
+
+        <pre><code>function verifyTOTPToken(
+  token: string,
+  secret: string
+): boolean</code></pre>
+
+        <h4>Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>token</td>
+                    <td>string</td>
+                    <td>6-digit TOTP code from user</td>
+                </tr>
+                <tr>
+                    <td>secret</td>
+                    <td>string</td>
+                    <td>The TOTP secret</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Returns</h4>
+        <p><code>boolean</code> - True if token is valid</p>
+
+        <h4>Example</h4>
+        <pre><code>const isValid = verifyTOTPToken('123456', secret);
+if (!isValid) {
+  throw new Error('Invalid 2FA code');
+}</code></pre>
+
+        <h2>Storage API</h2>
+
+        <h3>savePassword()</h3>
+        <p>Saves an encrypted password to storage.</p>
+
+        <pre><code>async function savePassword(
+  password: PasswordEntry
+): Promise&lt;string&gt;</code></pre>
+
+        <h4>PasswordEntry</h4>
+        <pre><code>interface PasswordEntry {
+  title: string;
+  username?: string;
+  password: string;
+  url?: string;
+  notes?: string;
+  category?: string;
+}</code></pre>
+
+        <h4>Returns</h4>
+        <p><code>Promise&lt;string&gt;</code> - The ID of the saved password</p>
+
+        <h4>Example</h4>
+        <pre><code>const id = await savePassword({
+  title: 'GitHub',
+  username: 'myuser',
+  password: 'secret123',
+  url: 'https://github.com',
+  category: 'work'
+});</code></pre>
+
+        <h3>getPassword()</h3>
+        <p>Retrieves and decrypts a password.</p>
+
+        <pre><code>async function getPassword(
+  id: string
+): Promise&lt;PasswordEntry&gt;</code></pre>
+
+        <h4>Example</h4>
+        <pre><code>const password = await getPassword(id);
+console.log(password.username);</code></pre>
+
+        <h3>deletePassword()</h3>
+        <p>Deletes a password from storage.</p>
+
+        <pre><code>async function deletePassword(
+  id: string
+): Promise&lt;void&gt;</code></pre>
+
+        <h4>Example</h4>
+        <pre><code>await deletePassword(id);</code></pre>
+
+        <h2>Rate Limiting</h2>
+
+        <h3>checkRateLimit()</h3>
+        <p>Checks if an action is rate-limited.</p>
+
+        <pre><code>function checkRateLimit(
+  key: string,
+  limit: number,
+  window: number
+): boolean</code></pre>
+
+        <h4>Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>key</td>
+                    <td>string</td>
+                    <td>Unique identifier (e.g., user ID)</td>
+                </tr>
+                <tr>
+                    <td>limit</td>
+                    <td>number</td>
+                    <td>Maximum attempts allowed</td>
+                </tr>
+                <tr>
+                    <td>window</td>
+                    <td>number</td>
+                    <td>Time window in seconds</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Returns</h4>
+        <p><code>boolean</code> - True if limit exceeded</p>
+
+        <h4>Example</h4>
+        <pre><code>// Allow 5 login attempts per 15 minutes
+if (checkRateLimit(userId, 5, 900)) {
+  throw new Error('Too many attempts. Try again later.');
+}</code></pre>
+
+        <h2>Error Handling</h2>
+
+        <h3>Common Error Codes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>AUTH_INVALID</td>
+                    <td>Invalid credentials</td>
+                </tr>
+                <tr>
+                    <td>ENCRYPTION_FAILED</td>
+                    <td>Encryption operation failed</td>
+                </tr>
+                <tr>
+                    <td>DECRYPTION_FAILED</td>
+                    <td>Decryption failed (wrong key or tampered data)</td>
+                </tr>
+                <tr>
+                    <td>RATE_LIMIT_EXCEEDED</td>
+                    <td>Too many requests</td>
+                </tr>
+                <tr>
+                    <td>INVALID_INPUT</td>
+                    <td>Input validation failed</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Example Error Handling</h3>
+        <pre><code>try {
+  const decrypted = await decrypt(data, iv, key);
+} catch (error) {
+  if (error.code === 'DECRYPTION_FAILED') {
+    // Handle decryption failure
+    console.error('Invalid master password or corrupted data');
+  } else {
+    // Handle other errors
+    console.error('Unexpected error:', error);
+  }
+}</code></pre>
+
+        <h2>Type Definitions</h2>
+
+        <h3>User</h3>
+        <pre><code>interface User {
+  $id: string;
+  email: string;
+  name?: string;
+  emailVerified: boolean;
+  status: boolean;
+}</code></pre>
+
+        <h3>EncryptedData</h3>
+        <pre><code>interface EncryptedData {
+  encryptedData: string;
+  iv: string;
+  createdAt: string;
+  updatedAt: string;
+}</code></pre>
+
+        <h3>PasswordDocument</h3>
+        <pre><code>interface PasswordDocument extends EncryptedData {
+  $id: string;
+  userId: string;
+  title: string;
+  category?: string;
+}</code></pre>
+
+        <h2>Best Practices</h2>
+        <ul>
+            <li>Always use HTTPS in production</li>
+            <li>Never log sensitive data (keys, passwords)</li>
+            <li>Validate all user inputs</li>
+            <li>Implement proper error handling</li>
+            <li>Use rate limiting for security-sensitive operations</li>
+            <li>Clear sensitive data from memory when done</li>
+            <li>Handle edge cases (network failures, invalid data)</li>
+        </ul>
+
+        <h2>Examples</h2>
+
+        <h3>Complete Password Save Flow</h3>
+        <pre><code>import { deriveKey, encrypt, savePassword } from '@/lib';
+
+async function saveNewPassword(
+  masterPassword: string,
+  passwordData: PasswordEntry
+) {
+  try {
+    // Get user's salt (stored during registration)
+    const salt = await getUserSalt();
+    
+    // Derive encryption key
+    const key = await deriveKey(masterPassword, salt);
+    
+    // Encrypt password
+    const { encryptedData, iv } = await encrypt(
+      JSON.stringify(passwordData),
+      key
+    );
+    
+    // Save to database
+    const id = await savePassword({
+      ...passwordData,
+      encryptedData,
+      iv
+    });
+    
+    return id;
+  } catch (error) {
+    console.error('Failed to save password:', error);
+    throw error;
+  }
+}</code></pre>
+
+        <h3>Complete Password Retrieval Flow</h3>
+        <pre><code>import { deriveKey, decrypt, getPassword } from '@/lib';
+
+async function retrievePassword(
+  passwordId: string,
+  masterPassword: string
+) {
+  try {
+    // Get encrypted password
+    const { encryptedData, iv } = await getPassword(passwordId);
+    
+    // Get user's salt
+    const salt = await getUserSalt();
+    
+    // Derive encryption key
+    const key = await deriveKey(masterPassword, salt);
+    
+    // Decrypt password
+    const decryptedJson = await decrypt(encryptedData, iv, key);
+    const passwordData = JSON.parse(decryptedJson);
+    
+    return passwordData;
+  } catch (error) {
+    console.error('Failed to retrieve password:', error);
+    throw error;
+  }
+}</code></pre>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Whisperrauth. <a href="https://github.com/whisperrnote/pass">View on GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

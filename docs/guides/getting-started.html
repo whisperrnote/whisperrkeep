@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - Whisperrauth Documentation</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo">🔐</span>
+                <h1>Whisperrauth Docs</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="getting-started.html" class="active">Getting Started</a></li>
+                <li><a href="architecture.html">Architecture</a></li>
+                <li><a href="security.html">Security</a></li>
+                <li><a href="../api/index.html">API</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-content">
+        <h1>🚀 Getting Started</h1>
+        <p>Welcome to Whisperrauth! This guide will help you set up and run the application locally.</p>
+
+        <h2>Prerequisites</h2>
+        <p>Before you begin, ensure you have the following installed:</p>
+        <ul>
+            <li><strong>Node.js</strong> (v20 or higher)</li>
+            <li><strong>npm</strong> or <strong>yarn</strong></li>
+            <li><strong>Git</strong></li>
+            <li>An <strong>Appwrite</strong> instance (cloud or self-hosted)</li>
+        </ul>
+
+        <h2>Installation</h2>
+
+        <h3>1. Clone the Repository</h3>
+        <pre><code>git clone https://github.com/whisperrnote/pass.git
+cd pass</code></pre>
+
+        <h3>2. Install Dependencies</h3>
+        <pre><code>npm install
+# or
+yarn install</code></pre>
+
+        <h3>3. Configure Environment Variables</h3>
+        <p>Copy the sample environment file and configure your Appwrite credentials:</p>
+        <pre><code>cp env.sample .env.local</code></pre>
+
+        <p>Edit <code>.env.local</code> and set the following variables:</p>
+        <pre><code># Appwrite Configuration
+NEXT_PUBLIC_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+NEXT_PUBLIC_APPWRITE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_APP_BASE_URL=http://localhost:3000
+
+# Collection IDs (created in Appwrite)
+NEXT_PUBLIC_USERS_COLLECTION_ID=your_users_collection_id
+NEXT_PUBLIC_PASSWORDS_COLLECTION_ID=your_passwords_collection_id
+NEXT_PUBLIC_DATABASE_ID=your_database_id</code></pre>
+
+        <div class="alert alert-info">
+            <strong>Note:</strong> You'll need to create collections in your Appwrite console. Refer to the <a href="architecture.html">Architecture</a> guide for database schema details.
+        </div>
+
+        <h3>4. Run the Development Server</h3>
+        <pre><code>npm run dev
+# or
+yarn dev</code></pre>
+
+        <p>Open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a> in your browser to see the application.</p>
+
+        <h2>Development Commands</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Command</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>npm run dev</code></td>
+                    <td>Start the development server with Turbopack</td>
+                </tr>
+                <tr>
+                    <td><code>npm run build</code></td>
+                    <td>Build the application for production</td>
+                </tr>
+                <tr>
+                    <td><code>npm run start</code></td>
+                    <td>Start the production server</td>
+                </tr>
+                <tr>
+                    <td><code>npm run lint</code></td>
+                    <td>Run ESLint to check code quality</td>
+                </tr>
+                <tr>
+                    <td><code>npm test</code></td>
+                    <td>Run the test suite</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Setting Up Appwrite</h2>
+
+        <h3>1. Create a Project</h3>
+        <ol>
+            <li>Go to your <a href="https://cloud.appwrite.io" target="_blank">Appwrite console</a></li>
+            <li>Create a new project</li>
+            <li>Copy the Project ID to your <code>.env.local</code></li>
+        </ol>
+
+        <h3>2. Create a Database</h3>
+        <ol>
+            <li>Navigate to the Databases section</li>
+            <li>Create a new database named "whisperrauth"</li>
+            <li>Copy the Database ID to your <code>.env.local</code></li>
+        </ol>
+
+        <h3>3. Create Collections</h3>
+        <p>Create the following collections with appropriate permissions:</p>
+        
+        <h4>Users Collection</h4>
+        <ul>
+            <li><strong>Name:</strong> users</li>
+            <li><strong>Permissions:</strong> Document level</li>
+            <li><strong>Attributes:</strong>
+                <ul>
+                    <li><code>userId</code> - String (required)</li>
+                    <li><code>email</code> - Email (required)</li>
+                    <li><code>encryptedMasterKey</code> - String</li>
+                    <li><code>salt</code> - String</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>Passwords Collection</h4>
+        <ul>
+            <li><strong>Name:</strong> passwords</li>
+            <li><strong>Permissions:</strong> Document level</li>
+            <li><strong>Attributes:</strong>
+                <ul>
+                    <li><code>userId</code> - String (required)</li>
+                    <li><code>encryptedData</code> - String (required)</li>
+                    <li><code>iv</code> - String (required)</li>
+                    <li><code>title</code> - String</li>
+                    <li><code>category</code> - String</li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="alert alert-warning">
+            <strong>Security Note:</strong> All sensitive data is encrypted on the client-side before being sent to Appwrite. The server never has access to your unencrypted passwords.
+        </div>
+
+        <h2>First Login</h2>
+        <ol>
+            <li>Navigate to <code>http://localhost:3000</code></li>
+            <li>Click "Register" to create a new account</li>
+            <li>Enter your email and create a strong master password</li>
+            <li>Your master password is used to encrypt all your data - <strong>never share it and don't lose it!</strong></li>
+            <li>After registration, you'll be logged in and can start adding passwords</li>
+        </ol>
+
+        <h2>Next Steps</h2>
+        <ul>
+            <li>Read the <a href="architecture.html">Architecture Guide</a> to understand how the system works</li>
+            <li>Review the <a href="security.html">Security Documentation</a> to learn about our encryption approach</li>
+            <li>Explore the <a href="../api/index.html">API Reference</a> if you're building integrations</li>
+        </ul>
+
+        <h2>Troubleshooting</h2>
+
+        <h3>Port Already in Use</h3>
+        <p>If port 3000 is already in use, you can specify a different port:</p>
+        <pre><code>npm run dev -- -p 3001</code></pre>
+
+        <h3>Appwrite Connection Issues</h3>
+        <ul>
+            <li>Verify your Appwrite endpoint is correct in <code>.env.local</code></li>
+            <li>Check that your project ID and collection IDs are accurate</li>
+            <li>Ensure your Appwrite instance is running and accessible</li>
+        </ul>
+
+        <h3>Build Errors</h3>
+        <ul>
+            <li>Delete <code>node_modules</code> and <code>package-lock.json</code></li>
+            <li>Run <code>npm install</code> again</li>
+            <li>Clear Next.js cache: <code>rm -rf .next</code></li>
+        </ul>
+
+        <h2>Need Help?</h2>
+        <p>If you encounter issues:</p>
+        <ul>
+            <li>Check the <a href="https://github.com/whisperrnote/pass/issues" target="_blank">GitHub Issues</a></li>
+            <li>Review existing <a href="https://github.com/whisperrnote/pass/discussions" target="_blank">discussions</a></li>
+            <li>Open a new issue with details about your problem</li>
+        </ul>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Whisperrauth. <a href="https://github.com/whisperrnote/pass">View on GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

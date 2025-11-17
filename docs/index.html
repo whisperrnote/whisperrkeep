@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whisperrauth Documentation</title>
+    <meta name="description" content="Zero-knowledge password manager documentation">
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo">🔐</span>
+                <h1>Whisperrauth Docs</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="guides/getting-started.html">Getting Started</a></li>
+                <li><a href="guides/architecture.html">Architecture</a></li>
+                <li><a href="guides/security.html">Security</a></li>
+                <li><a href="api/index.html">API</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="container">
+            <h1 class="hero-title">🔐 Whisperrauth Documentation</h1>
+            <p class="hero-subtitle">Zero-Knowledge Password Manager</p>
+            <p class="hero-description">
+                Your passwords, encrypted on your device. We never see them. Built with security, privacy, and usability at its core.
+            </p>
+            <div class="hero-buttons">
+                <a href="guides/getting-started.html" class="btn btn-primary">Get Started</a>
+                <a href="https://github.com/whisperrnote/pass" class="btn btn-secondary">View on GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container main-content">
+        <section class="features">
+            <h2>Key Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Zero-Knowledge Encryption</h3>
+                    <p>Your data is encrypted on your device using AES-256-GCM. We never have access to your passwords.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔑</div>
+                    <h3>Secure Password Generator</h3>
+                    <p>Create strong, unique passwords for all your accounts with customizable options.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👆</div>
+                    <h3>Biometric Authentication</h3>
+                    <p>Quick access with fingerprint or face recognition on supported devices.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Automatic Syncing</h3>
+                    <p>Your credentials sync seamlessly across all your devices.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>2FA Support</h3>
+                    <p>Built-in TOTP code generator for two-factor authentication.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Cross-Platform</h3>
+                    <p>Available on desktop, mobile, and as a browser extension.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="quick-links">
+            <h2>Documentation</h2>
+            <div class="link-grid">
+                <a href="guides/getting-started.html" class="link-card">
+                    <h3>🚀 Getting Started</h3>
+                    <p>Set up and run Whisperrauth locally</p>
+                </a>
+                <a href="guides/architecture.html" class="link-card">
+                    <h3>🏗️ Architecture</h3>
+                    <p>Learn about the system design and components</p>
+                </a>
+                <a href="guides/security.html" class="link-card">
+                    <h3>🔒 Security</h3>
+                    <p>Understand our security model and encryption</p>
+                </a>
+                <a href="api/index.html" class="link-card">
+                    <h3>📚 API Reference</h3>
+                    <p>Explore the API documentation</p>
+                </a>
+            </div>
+        </section>
+
+        <section class="security-info">
+            <h2>Security Grade</h2>
+            <div class="security-badge">
+                <span class="grade">🏆 Top-tier</span>
+                <span class="standard">NSA Suite B Compatible</span>
+            </div>
+            <ul class="security-features">
+                <li><strong>AES-256-GCM:</strong> Approved for TOP SECRET data</li>
+                <li><strong>PBKDF2 200k iterations:</strong> Resistant to rainbow table attacks</li>
+                <li><strong>256-bit salt + IV:</strong> Perfect forward secrecy</li>
+                <li><strong>Performance:</strong> ~1-3ms per operation</li>
+            </ul>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Whisperrauth. <a href="https://github.com/whisperrnote/pass">View on GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="assets/script.js"></script>
+</body>
+</html>
