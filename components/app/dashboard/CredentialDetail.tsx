@@ -28,6 +28,18 @@ export default function CredentialDetail({
   // Animation effect - show component after mount
   const rootRef = useRef<HTMLDivElement | null>(null);
 
+  // unified close that animates out then calls onClose
+  const closeWithAnimation = useCallback(() => {
+    // trigger CSS class hide
+    setIsVisible(false);
+    // if we have ref, also set transform to ensure swipe-out look
+    if (rootRef.current) {
+      rootRef.current.style.transition = "transform 300ms ease-out";
+      rootRef.current.style.transform = "translateX(100%)";
+    }
+    setTimeout(onClose, 300); // Wait for animation
+  }, [onClose]);
+
   useEffect(() => {
     if (!rootRef.current) return;
 
@@ -123,17 +135,7 @@ export default function CredentialDetail({
     setTimeout(() => setCopied(null), 1500);
   };
 
-  // unified close that animates out then calls onClose
-  const closeWithAnimation = useCallback(() => {
-    // trigger CSS class hide
-    setIsVisible(false);
-    // if we have ref, also set transform to ensure swipe-out look
-    if (rootRef.current) {
-      rootRef.current.style.transition = "transform 300ms ease-out";
-      rootRef.current.style.transform = "translateX(100%)";
-    }
-    setTimeout(onClose, 300); // Wait for animation
-  }, [onClose]);
+
 
   // Parse custom fields if they exist
   let customFields = [];

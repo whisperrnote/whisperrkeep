@@ -361,7 +361,7 @@ export class MasterPassCrypto {
       const decoder = new TextDecoder();
       const plaintext = decoder.decode(decrypted);
       return JSON.parse(plaintext);
-    } catch (error) {
+    } catch {
       throw new Error("Test decryption failed - invalid master password");
     }
   }

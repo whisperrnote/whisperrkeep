@@ -26,6 +26,8 @@ export default function OverviewPage() {
     Array<{ key: string; count: number; fields: string[]; ids: string[] }>
   >([]);
 
+  const locked = useMemo(() => !masterPassCrypto.isVaultUnlocked(), []);
+
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -185,7 +187,7 @@ export default function OverviewPage() {
     locked, /* keep locked out of deps to avoid unnecessary refetch on timer */
   ]);
 
-  const locked = useMemo(() => !masterPassCrypto.isVaultUnlocked(), []);
+
 
   if (!user) return null;
 

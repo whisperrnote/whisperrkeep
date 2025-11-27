@@ -13,8 +13,6 @@ interface DropdownMenuProps {
 export function DropdownMenu({
   trigger,
   children,
-  align: _align = "right",
-  width: _width = "200px",
   className = "",
 }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
