@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Shield,
@@ -18,17 +18,13 @@ import {
 import { Button } from "@/components/ui/Button";
 import { useTheme } from "@/app/providers";
 import { useAppwrite } from "@/app/appwrite-provider";
-import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { masterPassCrypto } from "@/app/(protected)/masterpass/logic";
 import { Navbar } from "./Navbar";
 import { PasskeySetup } from "@/components/overlays/passkeySetup";
-import { useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
-  // Overview removed from navigation
-  // { name: "Overview", href: "/overview", icon: Monitor },
   { name: "Sharing", href: "/sharing", icon: Share2 },
   { name: "New", href: "/credentials/new", icon: PlusCircle, big: true },
   { name: "TOTP", href: "/totp", icon: Shield },
@@ -45,21 +41,19 @@ const SIMPLIFIED_LAYOUT_PATHS = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { user, loading, logout, refresh } = useAppwrite();
-  const router = useRouter();
   const [showPasskeySetup, setShowPasskeySetup] = useState(false);
 
   const isSimplifiedLayout = SIMPLIFIED_LAYOUT_PATHS.includes(pathname);
 
   useEffect(() => {
     if (user && !loading) {
-      // Check for passkey enforcement
-      const shouldEnforce = 
-        user.mustCreatePasskey || 
-        (process.env.NEXT_PUBLIC_PASSKEY_ENFORCE === 'true' && !user.isPasskey);
-      
-      if (shouldEnforce && masterPassCrypto.isVaultUnlocked()) {
+      const shouldEnforcePasskey =
+        user.mustCreatePasskey ||
+        (process.env.NEXT_PUBLIC_PASSKEY_ENFORCE === "true" && !user.isPasskey);
+      if (shouldEnforcePasskey && masterPassCrypto.isVaultUnlocked()) {
         setShowPasskeySetup(true);
       }
     }
@@ -74,23 +68,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user && !isSimplifiedLayout) {
       masterPassCrypto.updateActivity();
-
-      // Set up global inactivity watcher
       let intervalId: number | undefined;
-      const handleActivity = () => masterPassCrypto.updateActivity();
+
+      const keepAlive = () => masterPassCrypto.updateActivity();
 
       const startWatcher = () => {
-        clearInterval(intervalId as unknown as number);
+        clearInterval(intervalId as number);
         intervalId = window.setInterval(() => {
           if (!masterPassCrypto.isVaultUnlocked()) {
             sessionStorage.setItem("masterpass_return_to", pathname);
             router.replace("/masterpass");
-            clearInterval(intervalId as unknown as number);
+            clearInterval(intervalId as number);
           }
         }, 1000);
       };
 
-      // Active interactions we consider as activity
+      const handleActivity = () => keepAlive();
+
       window.addEventListener("mousemove", handleActivity);
       window.addEventListener("mousedown", handleActivity);
       window.addEventListener("keydown", handleActivity);
@@ -99,9 +93,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       window.addEventListener("focus", handleActivity);
       window.addEventListener("click", handleActivity);
 
-      // Also re-check on visibility changes
       const handleVisibility = () => {
-        // if user returns and vault expired while hidden, redirect
         if (!masterPassCrypto.isVaultUnlocked()) {
           sessionStorage.setItem("masterpass_return_to", pathname);
           router.replace("/masterpass");
@@ -125,12 +117,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         window.removeEventListener("focus", handleActivity);
         window.removeEventListener("click", handleActivity);
         document.removeEventListener("visibilitychange", handleVisibility);
-        clearInterval(intervalId as unknown as number);
+        clearInterval(intervalId as number);
       };
     }
   }, [user, isSimplifiedLayout, pathname, router]);
 
-  const getThemeIcon = () => {
+  const ThemeIcon = () => {
     switch (theme) {
       case "light":
         return Sun;
@@ -141,7 +133,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const ThemeIcon = getThemeIcon();
+  const ThemeSymbol = ThemeIcon();
 
   if (isSimplifiedLayout) {
     return <div className="min-h-screen bg-background">{children}</div>;
@@ -156,55 +148,65 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Navbar />
 
       <div className="flex-1 flex w-full overflow-x-hidden pt-16">
-        {/* Bottom bar (mobile only) */}
-        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/100 border-t flex lg:hidden justify-around items-center h-16 shadow-lg safe-area-inset-bottom">
-          {navigation
-            .filter((item) => item.name !== "Import" && item.name !== "Overview")
-            .map((item) => {
-              const isActive = pathname === item.href;
-              const isBig = item.big;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={clsx(
-                    "flex flex-col items-center justify-center p-2 min-w-0 flex-1",
-                    isBig ? "scale-110" : "",
-                    isActive
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-primary",
-                  )}
-                  aria-label={item.name}
-                >
-                  <item.icon
+        <aside
+          className={clsx(
+            "hidden lg:block",
+            "fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-card border-r overflow-y-auto z-30",
+          )}
+          aria-label="Primary sidebar navigation"
+        >
+          <div className="flex flex-col h-full">
+            <nav className="flex-1 px-2 py-3 space-y-1">
+              {navigation.map((item) => {
+                const isActive = pathname === item.href;
+                const isBig = item.big;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
                     className={clsx(
-                      "mb-1 flex-shrink-0",
-                      isBig ? "h-7 w-7" : "h-5 w-5",
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-accent hover:text-accent-foreground",
+                      isBig && "text-base py-3",
                     )}
-                  />
-                  <span
-                    className={clsx("text-xs truncate", isBig && "font-semibold")}
                   >
+                    <item.icon className={clsx("h-5 w-5", isBig && "h-7 w-7")} />
                     {item.name}
-                  </span>
-                </Link>
-              );
-            })}
-        </nav>
-
-        {user && (
-          <PasskeySetup
-            isOpen={showPasskeySetup}
-            onClose={() => setShowPasskeySetup(false)}
-            userId={user.$id}
-            isEnabled={false}
-            onSuccess={() => {
-              setShowPasskeySetup(false);
-              refresh();
-            }}
-            trustUnlocked={true}
-          />
-        )}
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="px-2 py-3 border-t space-y-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-3"
+                onClick={() => {
+                  const themes: Array<"light" | "dark" | "system"> = [
+                    "light",
+                    "dark",
+                    "system",
+                  ];
+                  const nextTheme = themes[(themes.indexOf(theme) + 1) % themes.length];
+                  setTheme(nextTheme);
+                }}
+              >
+                <ThemeSymbol className="h-4 w-4" />
+                {`${theme.charAt(0).toUpperCase() + theme.slice(1)} theme`}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-3"
+                onClick={() => {
+                  masterPassCrypto.lockNow();
+                  if (!masterPassCrypto.isVaultUnlocked()) {
+                    sessionStorage.setItem("masterpass_return_to", pathname);
+                    router.replace("/masterpass");
+                  }
+                }}
               >
                 <Shield className="h-4 w-4" />
                 Lock now
@@ -222,7 +224,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        {/* Main content (offset for fixed sidebar) */}
         <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden lg:ml-64">
           <main className="flex-1 px-2 py-4 sm:px-3 md:px-4 lg:px-4 pb-20 lg:pb-6 overflow-x-hidden max-w-full">
             {children}
@@ -230,10 +231,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Bottom bar (mobile only) */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/100 border-t flex lg:hidden justify-around items-center h-16 shadow-lg safe-area-inset-bottom">
         {navigation
-          .filter((item) => item.name !== "Import" && item.name !== "Overview")
+          .filter((item) => item.name !== "Import")
           .map((item) => {
             const isActive = pathname === item.href;
             const isBig = item.big;
@@ -251,6 +251,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 aria-label={item.name}
               >
                 <item.icon
+                  className={clsx(
+                    "mb-1 flex-shrink-0",
+                    isBig ? "h-7 w-7" : "h-5 w-5",
+                  )}
+                />
+                <span className={clsx("text-xs truncate", isBig && "font-semibold")}>{item.name}</span>
+              </Link>
+            );
+          })}
+      </nav>
 
       {user && (
         <PasskeySetup
@@ -265,20 +275,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           trustUnlocked={true}
         />
       )}
-                  className={clsx(
-                    "mb-1 flex-shrink-0",
-                    isBig ? "h-7 w-7" : "h-5 w-5",
-                  )}
-                />
-                <span
-                  className={clsx("text-xs truncate", isBig && "font-semibold")}
-                >
-                  {item.name}
-                </span>
-              </Link>
-            );
-          })}
-      </nav>
     </div>
   );
 }
