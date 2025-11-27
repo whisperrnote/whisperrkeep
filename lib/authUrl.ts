@@ -42,9 +42,13 @@ export function getSourceURL(): string {
  */
 export function openAuthPopup(): void {
   const authURL = getAuthURL();
-  const sourceURL = getSourceURL();
+  const loginPath =
+    process.env.NEXT_PUBLIC_AUTH_LOGIN_PATH || "/login";
+  const normalizedLoginPath = loginPath.startsWith("/")
+    ? loginPath
+    : `/${loginPath}`;
   const popup = window.open(
-    `${authURL}?source=${encodeURIComponent(sourceURL)}`,
+    `${authURL}${normalizedLoginPath}`,
     "auth_popup",
     "width=500,height=700,resizable=yes,scrollbars=yes",
   );
