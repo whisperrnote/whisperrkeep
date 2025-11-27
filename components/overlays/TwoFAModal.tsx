@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useFinalizeAuth } from "@/lib/finalizeAuth";
-import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -11,7 +10,6 @@ import {
   listMfaFactors,
   createMfaChallenge,
   completeMfaChallenge,
-  getMfaAuthenticationStatus,
 } from "@/lib/appwrite";
 import toast from "react-hot-toast";
 
@@ -21,7 +19,6 @@ interface TwoFAModalProps {
 }
 
 export function TwoFAModal({ isOpen, onClose }: TwoFAModalProps) {
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [factors, setFactors] = useState<{
     totp: boolean;
@@ -55,7 +52,7 @@ export function TwoFAModal({ isOpen, onClose }: TwoFAModalProps) {
       if (mfaFactors.totp) setSelectedFactor("totp");
       else if (mfaFactors.email) setSelectedFactor("email");
       else if (mfaFactors.phone) setSelectedFactor("phone");
-    } catch (error) {
+    } catch {
       toast.error("Failed to load authentication factors");
     }
   };

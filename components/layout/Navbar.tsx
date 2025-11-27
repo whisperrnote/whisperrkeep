@@ -19,6 +19,7 @@ export function Navbar() {
     <nav className="border-b border-border fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="max-w-screen-xl mx-auto flex justify-between items-center h-16 px-4 relative">
         <Link href="/" className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/logo.png"
             alt="Whisperrauth Logo"
@@ -113,7 +114,7 @@ export function Navbar() {
                     onClick={() => {
                       // Lock immediately and redirect to masterpass
                       import("next/navigation").then(
-                        ({ usePathname, useRouter }) => {
+                        () => {
                           // Note: cannot use hooks here; fallback to direct masterPassCrypto + location
                           Promise.resolve().then(async () => {
                             const { masterPassCrypto } = await import(

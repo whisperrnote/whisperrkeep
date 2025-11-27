@@ -760,7 +760,7 @@ const decryptDocument = async (
         );
     }
   } catch (error) {
-    console.error("Failed to decrypt document:", error);
+    logError("Failed to decrypt document:", error as Error);
     // Return original document if decryption fails (fallback)
     return doc;
   }

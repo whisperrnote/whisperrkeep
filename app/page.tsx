@@ -47,7 +47,7 @@ function Copy(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function LandingPage() {
-  const { theme } = useTheme();
+  const { } = useTheme();
   const demoRef = useRef<HTMLDivElement>(null);
 
   const handleViewDemo = () => {

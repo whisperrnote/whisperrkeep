@@ -326,6 +326,7 @@ export default function CredentialItem({
         <div className="flex-shrink-0">
           <div className="w-10 h-10 rounded-full bg-[rgba(191,174,153,0.7)] flex items-center justify-center overflow-hidden">
             {faviconUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img src={faviconUrl} alt="" className="w-6 h-6" />
             ) : (
               <span className="text-[rgb(141,103,72)] font-bold text-sm">

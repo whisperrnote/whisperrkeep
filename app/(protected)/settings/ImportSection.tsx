@@ -1,21 +1,20 @@
 "use client";
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AppwriteService } from "@/lib/appwrite";
 import { ImportService } from "@/utils/import/import-service";
 import { useAppwrite } from "@/app/appwrite-provider";
 
-function parseBitwardenCSV(csv: string) {
+function parseBitwardenCSV(_csv: string) {
   // TODO: Implement Bitwarden CSV parsing
   return [];
 }
-function parseZohoCSV(csv: string) {
+function parseZohoCSV(_csv: string) {
   // TODO: Implement Zoho Vault CSV parsing
   return [];
 }
-function parseProtonCSV(csv: string) {
+function parseProtonCSV(_csv: string) {
   // TODO: Implement Proton Pass CSV parsing
   return [];
 }

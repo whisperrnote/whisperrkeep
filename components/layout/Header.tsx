@@ -16,7 +16,7 @@ interface HeaderProps {
   sidebarOpen: boolean;
 }
 
-export function Header({ onMenuClick, sidebarOpen }: HeaderProps) {
+export function Header({ onMenuClick }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAppwrite();
   const pathname = usePathname();
@@ -25,12 +25,6 @@ export function Header({ onMenuClick, sidebarOpen }: HeaderProps) {
   if (SIMPLIFIED_LAYOUT_PATHS.includes(pathname)) {
     return null;
   }
-
-  const themeOptions = [
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
-    { value: "system", label: "System", icon: Monitor },
-  ] as const;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -47,6 +41,7 @@ export function Header({ onMenuClick, sidebarOpen }: HeaderProps) {
 
           <div className="flex items-center gap-2">
             {/* Replace PM with logo */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/logo.png"
               alt="Whisperrauth Logo"

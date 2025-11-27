@@ -37,7 +37,7 @@ export function MasterPassModal({ isOpen, onClose }: MasterPassModalProps) {
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { user, refresh } = useAppwrite();
+  const { user } = useAppwrite();
   const { finalizeAuth } = useFinalizeAuth();
   const router = useRouter();
 

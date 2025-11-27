@@ -126,7 +126,7 @@ export function PasskeySetup({
           toast.error("Incorrect master password.");
           return false;
         }
-      } catch (decryptError) {
+      } catch {
         toast.error("Incorrect master password.");
         return false;
       }

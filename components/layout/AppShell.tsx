@@ -51,8 +51,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user && !loading) {
       const shouldEnforcePasskey =
-        user.mustCreatePasskey ||
-        (process.env.NEXT_PUBLIC_PASSKEY_ENFORCE === "true" && !user.isPasskey);
+        (user as any).mustCreatePasskey ||
+        (process.env.NEXT_PUBLIC_PASSKEY_ENFORCE === "true" && !(user as any).isPasskey);
       if (shouldEnforcePasskey && masterPassCrypto.isVaultUnlocked()) {
         setShowPasskeySetup(true);
       }

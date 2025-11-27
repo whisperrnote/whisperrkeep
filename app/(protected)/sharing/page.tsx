@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { UserPlus, Construction } from "lucide-react";
+import { Construction } from "lucide-react";
 import VaultGuard from "@/components/layout/VaultGuard";
 
 export default function SharingPage() {

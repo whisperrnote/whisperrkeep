@@ -11,7 +11,6 @@ import { createTotpSecret, updateTotpSecret } from "@/lib/appwrite";
 import { useAppwrite } from "@/app/appwrite-provider";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
-import { TotpSecrets } from "@/types/appwrite";
 
 export default function NewTotpDialog({
   open,

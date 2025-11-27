@@ -172,7 +172,7 @@ export default function OverviewPage() {
           setDupGroups(locked ? [] : dupGroupsLocal);
           setLoading(false);
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) setLoading(false);
       }
     };
@@ -181,7 +181,8 @@ export default function OverviewPage() {
       cancelled = true;
     };
   }, [
-    user /* keep locked out of deps to avoid unnecessary refetch on timer */,
+    user,
+    locked, /* keep locked out of deps to avoid unnecessary refetch on timer */
   ]);
 
   const locked = useMemo(() => !masterPassCrypto.isVaultUnlocked(), []);

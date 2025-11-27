@@ -59,7 +59,7 @@ export default function CredentialDetail({
         startY = e.clientY;
         currentX = startX;
         startTime = Date.now();
-        (e.target as Element).setPointerCapture?.(e.pointerId);
+        // (e.target as Element).setPointerCapture?.(e.pointerId);
       };
 
       const onPointerMove = (e: PointerEvent) => {
@@ -108,7 +108,7 @@ export default function CredentialDetail({
     return () => {
       document.removeEventListener("pointerdown", onDocumentPointerDown);
     };
-  }, [isMobile]);
+  }, [isMobile, closeWithAnimation]);
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 10);
     return () => clearTimeout(timer);
@@ -227,6 +227,7 @@ export default function CredentialDetail({
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mr-4 overflow-hidden">
               {faviconUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={faviconUrl} alt="" className="w-8 h-8" />
               ) : (
                 <span className="text-xl font-bold text-muted-foreground">

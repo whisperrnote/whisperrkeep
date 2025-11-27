@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Shield, Plus, Copy, Edit, Trash2, Timer } from "lucide-react";
+import { Shield, Plus, Copy, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { useAppwrite } from "@/app/appwrite-provider";
@@ -50,7 +49,7 @@ export default function TOTPPage() {
         userFolders.forEach((f) => folderMap.set(f.$id, f.name));
         setFolders(folderMap);
       })
-      .catch((error) => {
+      .catch(() => {
         toast.error("Failed to load data.");
       })
       .finally(() => setLoading(false));
@@ -95,6 +94,9 @@ export default function TOTPPage() {
       authenticator.options = {
         ...authenticator.options,
         step: period || 30,
+        digits: digits || 6,
+        // @ts-expect-error - algorithm type mismatch in some versions
+        algorithm: algorithm || "SHA1",
       };
       return authenticator.generate(normalized);
     } catch {
