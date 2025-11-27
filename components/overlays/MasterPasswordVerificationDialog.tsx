@@ -34,7 +34,7 @@ export default function MasterPasswordVerificationDialog({
     setError("");
 
     try {
-      const isValid = await masterPassCrypto.unlock(user.$id, password);
+      const isValid = await masterPassCrypto.unlock(password, user.$id);
 
       if (isValid) {
         toast.success("Master password verified.");

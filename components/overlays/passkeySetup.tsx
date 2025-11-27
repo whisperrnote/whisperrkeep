@@ -57,7 +57,7 @@ export function PasskeySetup({
     
     setVerifyingPassword(true);
     try {
-      const isValid = await masterPassCrypto.unlock(userId, masterPassword);
+      const isValid = await masterPassCrypto.unlock(masterPassword, userId);
       if (isValid) {
         return true;
       } else {
@@ -92,7 +92,7 @@ export function PasskeySetup({
       
       if (!masterKey && masterPassword) {
           // Ensure we are unlocked if we have the password
-          await masterPassCrypto.unlock(userId, masterPassword);
+          await masterPassCrypto.unlock(masterPassword, userId);
           masterKey = masterPassCrypto.getMasterKey();
       }
 
