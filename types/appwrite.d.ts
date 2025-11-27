@@ -433,6 +433,18 @@ export type User = Models.Row & {
     updatedAt: string | null;
 }
 
+export type Keychain = Models.Row & {
+    userId: string;
+    type: string;
+    credentialId: string | null;
+    wrappedKey: string;
+    salt: string;
+    params: string | null;
+    isBackup: boolean;
+    createdAt: string | null;
+    updatedAt: string | null;
+}
+
 export type Messages = Models.Row & {
     conversationId: string;
     senderId: string;

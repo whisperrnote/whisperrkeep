@@ -44,7 +44,7 @@ export class MasterPassCrypto {
       keyMaterial,
       { name: "AES-GCM", length: MasterPassCrypto.KEY_SIZE },
       true, // Make extractable for passkey functionality
-      ["encrypt", "decrypt"],
+      ["encrypt", "decrypt", "wrapKey", "unwrapKey"],
     );
   }
 
@@ -66,7 +66,7 @@ export class MasterPassCrypto {
       keyBytes,
       { name: "AES-GCM", length: 256 },
       true, // Make it extractable so it can be re-wrapped
-      ["encrypt", "decrypt"],
+      ["encrypt", "decrypt", "wrapKey", "unwrapKey"],
     );
   }
 
@@ -90,6 +90,15 @@ export class MasterPassCrypto {
     isFirstTime: boolean = false,
   ): Promise<boolean> {
     try {
+      // 1. Try to unlock via Keychain (New Architecture)
+      const keychainSuccess = await this.unlockWithKeychain(masterPassword, userId);
+      if (keychainSuccess) {
+        this.isUnlocked = true;
+        sessionStorage.setItem("vault_unlocked", Date.now().toString());
+        return true;
+      }
+
+      // 2. Fallback to Legacy Unlock (Old Architecture)
       // SECURITY FIX: Use truly random salt, not derived from userId
       // For backward compatibility, we still derive a salt from userId for now
       // TODO: Migrate to storing random salts with encrypted check values
@@ -101,7 +110,12 @@ export class MasterPassCrypto {
 
       // For first-time setup, skip verification and just set the key
       if (isFirstTime) {
-        this.masterKey = testKey;
+        // Generate a random MEK for new users instead of using derived key
+        this.masterKey = await this.generateRandomMEK();
+        
+        // Create keychain entry immediately
+        await this.createKeychainEntry(this.masterKey, masterPassword, userId);
+
         this.isUnlocked = true;
         sessionStorage.setItem("vault_unlocked", Date.now().toString());
         return true;
@@ -113,6 +127,12 @@ export class MasterPassCrypto {
         return false;
       }
 
+      // Password is valid (Legacy Mode)
+      // 3. Perform Zero-Re-encryption Migration
+      // We use the legacy derived key as the MEK and wrap it
+      logDebug("Migrating user to Keychain architecture...");
+      await this.createKeychainEntry(testKey, masterPassword, userId);
+      
       this.masterKey = testKey;
       this.isUnlocked = true;
       sessionStorage.setItem("vault_unlocked", Date.now().toString());
@@ -120,6 +140,133 @@ export class MasterPassCrypto {
     } catch (error) {
       logError("Failed to unlock vault", error as Error);
       return false;
+    }
+  }
+
+  // Generate a random Master Encryption Key (MEK)
+  private async generateRandomMEK(): Promise<CryptoKey> {
+    return await crypto.subtle.generateKey(
+      {
+        name: "AES-GCM",
+        length: 256,
+      },
+      true,
+      ["encrypt", "decrypt", "wrapKey", "unwrapKey"]
+    );
+  }
+
+  // Unlock using the Keychain architecture
+  private async unlockWithKeychain(password: string, userId: string): Promise<boolean> {
+    try {
+      const { AppwriteService } = await import("../../../lib/appwrite");
+      const keychainEntries = await AppwriteService.listKeychainEntries(userId);
+      
+      // Find password type entry
+      const passwordEntry = keychainEntries.find(k => k.type === 'password');
+      
+      if (!passwordEntry) {
+        return false; // No keychain entry found, fall back to legacy
+      }
+
+      // Derive AuthKey using the stored salt
+      const salt = new Uint8Array(
+        atob(passwordEntry.salt).split("").map(c => c.charCodeAt(0))
+      );
+      
+      const authKey = await this.deriveKey(password, salt);
+
+      // Unwrap the MEK
+      const wrappedKeyBytes = new Uint8Array(
+        atob(passwordEntry.wrappedKey).split("").map(c => c.charCodeAt(0))
+      );
+
+      // Extract IV (first 12 bytes for AES-GCM wrapping usually, but here we likely used encrypt)
+      // In our wrapKey implementation below, we use AES-GCM encrypt, so format is IV + Ciphertext
+      const iv = wrappedKeyBytes.slice(0, MasterPassCrypto.IV_SIZE);
+      const ciphertext = wrappedKeyBytes.slice(MasterPassCrypto.IV_SIZE);
+
+      try {
+        const mekBytes = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: iv },
+          authKey,
+          ciphertext
+        );
+
+        // Import the MEK
+        this.masterKey = await crypto.subtle.importKey(
+          "raw",
+          mekBytes,
+          { name: "AES-GCM", length: 256 },
+          true,
+          ["encrypt", "decrypt", "wrapKey", "unwrapKey"]
+        );
+
+        return true;
+      } catch (e) {
+        logDebug("Failed to unwrap key with provided password", { error: e });
+        return false;
+      }
+    } catch (error) {
+      logError("Error in unlockWithKeychain", error as Error);
+      return false;
+    }
+  }
+
+  // Create a new keychain entry (wraps the MEK with the password)
+  private async createKeychainEntry(mek: CryptoKey, password: string, userId: string): Promise<void> {
+    try {
+      const { AppwriteService, ID } = await import("../../../lib/appwrite");
+      
+      // Generate new random salt for the AuthKey
+      const salt = crypto.getRandomValues(new Uint8Array(MasterPassCrypto.SALT_SIZE));
+      const authKey = await this.deriveKey(password, salt);
+
+      // Export MEK to raw bytes
+      const mekBytes = await crypto.subtle.exportKey("raw", mek);
+
+      // Encrypt (Wrap) the MEK with AuthKey
+      const iv = crypto.getRandomValues(new Uint8Array(MasterPassCrypto.IV_SIZE));
+      const encryptedMek = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        authKey,
+        mekBytes
+      );
+
+      // Combine IV + Encrypted MEK
+      const combined = new Uint8Array(iv.length + encryptedMek.byteLength);
+      combined.set(iv);
+      combined.set(new Uint8Array(encryptedMek), iv.length);
+
+      const wrappedKeyBase64 = btoa(String.fromCharCode(...combined));
+      const saltBase64 = btoa(String.fromCharCode(...salt));
+
+      // Check if entry exists to update or create
+      const existing = await AppwriteService.listKeychainEntries(userId);
+      const passwordEntry = existing.find(k => k.type === 'password');
+
+      if (passwordEntry) {
+        // Update existing (though usually we'd delete and recreate or update)
+        // For now, let's just create if not exists, or we might need an update method in AppwriteService
+        // Assuming we want to overwrite for migration/password change
+         await AppwriteService.deleteKeychainEntry(passwordEntry.$id);
+      }
+
+      await AppwriteService.createKeychainEntry({
+        userId,
+        type: 'password',
+        credentialId: null,
+        wrappedKey: wrappedKeyBase64,
+        salt: saltBase64,
+        params: JSON.stringify({
+          iterations: MasterPassCrypto.PBKDF2_ITERATIONS,
+          algo: "SHA-256"
+        }),
+        isBackup: false
+      });
+
+    } catch (error) {
+      logError("Failed to create keychain entry", error as Error);
+      // Don't throw, as this might be a background migration
     }
   }
 

@@ -14,6 +14,7 @@ import type {
   Folders,
   SecurityLogs,
   User,
+  Keychain,
 } from "@/types/appwrite.d";
 import { AuthenticatorType } from "appwrite";
 import {
@@ -102,6 +103,8 @@ export const APPWRITE_COLLECTION_SECURITYLOGS_ID =
   process.env.APPWRITE_COLLECTION_SECURITYLOGS_ID || "securityLogs";
 export const APPWRITE_COLLECTION_USER_ID =
   process.env.APPWRITE_COLLECTION_USER_ID || "user";
+export const APPWRITE_COLLECTION_KEYCHAIN_ID =
+  process.env.APPWRITE_COLLECTION_KEYCHAIN_ID || "keychain";
 
 // --- Collection Structure & Field Mappings ---
 // Dynamically derive encrypted/plaintext fields from the types
@@ -146,6 +149,7 @@ const ENCRYPTED_FIELDS = {
     "publicKey",      // WebAuthn public key
     "sessionFingerprint", // Session fingerprint
   ],
+  keychain: [], // Keychain entries are already encrypted/hashed or public
 } as const;
 
 function getPlaintextFields<T>(
@@ -294,6 +298,26 @@ export const COLLECTION_SCHEMAS = {
       ENCRYPTED_FIELDS.user,
     ),
   },
+  keychain: {
+    encrypted: ENCRYPTED_FIELDS.keychain,
+    plaintext: getPlaintextFields<Keychain>(
+      [
+        "userId",
+        "type",
+        "credentialId",
+        "wrappedKey",
+        "salt",
+        "params",
+        "isBackup",
+        "createdAt",
+        "updatedAt",
+        "$id",
+        "$createdAt",
+        "$updatedAt",
+      ],
+      ENCRYPTED_FIELDS.keychain,
+    ),
+  },
 };
 
 // --- Secure CRUD Operations ---
@@ -382,6 +406,37 @@ export class AppwriteService {
       data,
     );
     return doc as SecurityLogs;
+  }
+
+  static async createKeychainEntry(
+    data: Omit<Keychain, "$id" | "$createdAt" | "$updatedAt">,
+  ): Promise<Keychain> {
+    const doc = await appwriteDatabases.createDocument(
+      APPWRITE_DATABASE_ID,
+      APPWRITE_COLLECTION_KEYCHAIN_ID,
+      ID.unique(),
+      data,
+    );
+    return doc as unknown as Keychain;
+  }
+
+  static async listKeychainEntries(
+    userId: string,
+  ): Promise<Keychain[]> {
+    const response = await appwriteDatabases.listDocuments(
+      APPWRITE_DATABASE_ID,
+      APPWRITE_COLLECTION_KEYCHAIN_ID,
+      [Query.equal("userId", userId)],
+    );
+    return response.documents as unknown as Keychain[];
+  }
+
+  static async deleteKeychainEntry(id: string): Promise<void> {
+    await appwriteDatabases.deleteDocument(
+      APPWRITE_DATABASE_ID,
+      APPWRITE_COLLECTION_KEYCHAIN_ID,
+      id,
+    );
   }
 
   static async createUserDoc(data: Omit<User, "$id">): Promise<User> {
@@ -1554,6 +1609,22 @@ export async function resetMasterpassAndWipe(userId: string): Promise<void> {
       await appwriteDatabases.deleteDocument(
         APPWRITE_DATABASE_ID,
         APPWRITE_COLLECTION_SECURITYLOGS_ID,
+        doc.$id,
+      );
+    }
+  } catch {}
+
+  // Delete keychain entries
+  try {
+    const keys = await appwriteDatabases.listDocuments(
+      APPWRITE_DATABASE_ID,
+      APPWRITE_COLLECTION_KEYCHAIN_ID,
+      [Query.equal("userId", userId)],
+    );
+    for (const doc of keys.documents) {
+      await appwriteDatabases.deleteDocument(
+        APPWRITE_DATABASE_ID,
+        APPWRITE_COLLECTION_KEYCHAIN_ID,
         doc.$id,
       );
     }
