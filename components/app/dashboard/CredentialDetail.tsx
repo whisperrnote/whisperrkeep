@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import {
   Copy,
@@ -124,7 +124,7 @@ export default function CredentialDetail({
   };
 
   // unified close that animates out then calls onClose
-  const closeWithAnimation = () => {
+  const closeWithAnimation = useCallback(() => {
     // trigger CSS class hide
     setIsVisible(false);
     // if we have ref, also set transform to ensure swipe-out look
@@ -133,7 +133,7 @@ export default function CredentialDetail({
       rootRef.current.style.transform = "translateX(100%)";
     }
     setTimeout(onClose, 300); // Wait for animation
-  };
+  }, [onClose]);
 
   // Parse custom fields if they exist
   let customFields = [];
@@ -141,7 +141,7 @@ export default function CredentialDetail({
     if (credential.customFields) {
       customFields = JSON.parse(credential.customFields);
     }
-  } catch (e) {
+  } catch {
     customFields = [];
   }
 

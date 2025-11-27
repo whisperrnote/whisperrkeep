@@ -328,11 +328,9 @@ export class MasterPassCrypto {
 
       // If we reach here, we successfully decrypted something
       return true;
-    } catch (error) {
+    } catch {
       // If any decryption fails, the password is wrong
-      logDebug("Master password validation failed", { 
-        error: error instanceof Error ? error.message : error 
-      });
+      logDebug("Master password validation failed");
       return false;
     }
   }
@@ -791,28 +789,4 @@ const decryptDocument = async (
 // Add utility function for reset
 export const resetMasterPasswordVault = () => {
   masterPassCrypto.resetMasterPassword();
-};
-
-// Add utility to update the check value in the user doc
-export const updateMasterpassCheckValue = async (userId: string) => {
-  const {
-    appwriteDatabases,
-    APPWRITE_DATABASE_ID,
-    APPWRITE_COLLECTION_USER_ID,
-    Query,
-  } = await import("../../../lib/appwrite");
-  const response = await appwriteDatabases.listDocuments(
-    APPWRITE_DATABASE_ID,
-    APPWRITE_COLLECTION_USER_ID,
-    [Query.equal("userId", userId)],
-  );
-  const userDoc = response.documents[0];
-  if (!userDoc) return;
-  const check = await masterPassCrypto.encryptCheckValue(userId);
-  await appwriteDatabases.updateDocument(
-    APPWRITE_DATABASE_ID,
-    APPWRITE_COLLECTION_USER_ID,
-    userDoc.$id,
-    { check },
-  );
 };

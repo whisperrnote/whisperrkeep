@@ -6,15 +6,15 @@ import { AppwriteService } from "@/lib/appwrite";
 import { ImportService } from "@/utils/import/import-service";
 import { useAppwrite } from "@/app/appwrite-provider";
 
-function parseBitwardenCSV(_csv: string) {
+function parseBitwardenCSV() {
   // TODO: Implement Bitwarden CSV parsing
   return [];
 }
-function parseZohoCSV(_csv: string) {
+function parseZohoCSV() {
   // TODO: Implement Zoho Vault CSV parsing
   return [];
 }
-function parseProtonCSV(_csv: string) {
+function parseProtonCSV() {
   // TODO: Implement Proton Pass CSV parsing
   return [];
 }
@@ -58,9 +58,9 @@ export default function ImportSection() {
       const text = await file.text();
       type Imported = Record<string, unknown>;
       let credentials: Imported[] = [];
-      if (importType === "bitwarden") credentials = parseBitwardenCSV(text);
-      else if (importType === "zoho") credentials = parseZohoCSV(text);
-      else if (importType === "proton") credentials = parseProtonCSV(text);
+      if (importType === "bitwarden") credentials = parseBitwardenCSV();
+      else if (importType === "zoho") credentials = parseZohoCSV();
+      else if (importType === "proton") credentials = parseProtonCSV();
       else if (importType === "json") credentials = parseJSON(text);
       if (!credentials.length) throw new Error("No credentials found in file.");
       credentials = credentials.map((c) => ({ ...c, userId: user.$id }));
