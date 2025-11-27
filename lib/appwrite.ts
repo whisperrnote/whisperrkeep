@@ -1438,10 +1438,10 @@ export async function deleteUserAccount(userId: string) {
   ]);
 
   await Promise.all([
-    ...creds.map((c) => AppwriteService.deleteCredential(c.$id)),
-    ...totps.map((t) => AppwriteService.deleteTOTPSecret(t.$id)),
-    ...folders.map((f) => AppwriteService.deleteFolder(f.$id)),
-    ...logs.map((l) => AppwriteService.deleteSecurityLog(l.$id)),
+    ...creds.map((c: Credentials) => AppwriteService.deleteCredential(c.$id)),
+    ...totps.map((t: TotpSecrets) => AppwriteService.deleteTOTPSecret(t.$id)),
+    ...folders.map((f: Folders) => AppwriteService.deleteFolder(f.$id)),
+    ...logs.map((l: SecurityLogs) => AppwriteService.deleteSecurityLog(l.$id)),
     userDoc?.$id
       ? AppwriteService.deleteUserDoc(userDoc.$id)
       : Promise.resolve(),
