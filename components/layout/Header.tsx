@@ -2,11 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Menu, Moon, Sun, Monitor, User } from "lucide-react";
+import { Menu, Moon, Sun, Monitor, User, Sparkles } from "lucide-react";
 import { useTheme } from "@/app/providers";
 import { useAppwrite } from "@/app/appwrite-provider";
 import { Button } from "@/components/ui/Button";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
+import { useAI } from "@/app/context/AIContext";
 
 // Pages that should use the simplified layout (no sidebar/header)
 const SIMPLIFIED_LAYOUT_PATHS = ["/"];
@@ -19,6 +20,7 @@ interface HeaderProps {
 export function Header({ onMenuClick }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAppwrite();
+  const { openAIModal } = useAI();
   const pathname = usePathname();
 
   // Don't render the header on simplified layout pages
@@ -54,6 +56,16 @@ export function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={openAIModal}
+            className="text-primary hover:text-primary hover:bg-primary/10"
+            title="AI Assistant"
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"

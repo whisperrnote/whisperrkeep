@@ -55,6 +55,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 // Compose all providers at the root
 import { AppwriteProvider } from "./appwrite-provider";
 import { BackgroundTaskProvider } from "./context/BackgroundTaskContext";
+import { AIProvider } from "./context/AIContext";
 import { Toaster } from "react-hot-toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -62,16 +63,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider>
       <AppwriteProvider>
         <BackgroundTaskProvider>
-          {children}
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: "#333",
-                color: "#fff",
-              },
-            }}
-          />
+          <AIProvider>
+            {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: "#333",
+                  color: "#fff",
+                },
+              }}
+            />
+          </AIProvider>
         </BackgroundTaskProvider>
       </AppwriteProvider>
     </ThemeProvider>

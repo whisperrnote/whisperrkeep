@@ -84,3 +84,4 @@ secrets/
 .DS_Store
 Thumbs.db
 errors.txt
+.ignore/
