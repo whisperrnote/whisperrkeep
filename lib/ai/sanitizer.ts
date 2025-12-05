@@ -44,7 +44,8 @@ export class PrivacyFilter {
         return { password: '' };
         
       case 'GENERAL_QUERY':
-        // No data context allowed for general queries to prevent accidental leakage
+      case 'COMMAND_INTENT':
+        // No data context allowed for general queries/commands to prevent accidental leakage
         return null;
 
       default:

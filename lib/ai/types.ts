@@ -2,7 +2,8 @@ export type AnalysisMode =
   | 'URL_SAFETY'       // Context: Only URL
   | 'VAULT_ORGANIZE'   // Context: Name, URL, Category (NO Secrets)
   | 'PASSWORD_AUDIT'   // Context: Password string only (Ephemeral)
-  | 'GENERAL_QUERY';   // Context: User prompt
+  | 'GENERAL_QUERY'    // Context: User prompt
+  | 'COMMAND_INTENT';  // Context: User prompt -> structured command
 
 export interface AIRequestPayload {
   mode: AnalysisMode;
@@ -20,4 +21,3 @@ export interface AIProvider {
   name: string;
   generate(payload: AIRequestPayload): Promise<AIResponse>;
 }
-

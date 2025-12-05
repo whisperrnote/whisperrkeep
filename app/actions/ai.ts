@@ -58,6 +58,35 @@ export async function generateAIContent(payload: AIRequestPayload): Promise<AIRe
         prompt = payload.prompt || "";
         break;
 
+      case 'COMMAND_INTENT':
+        prompt = `
+          You are an AI Commander for a Password Manager.
+          Interpret the user's intent and return a JSON object with a specific "action".
+          
+          Supported Actions:
+          1. "CREATE_CREDENTIAL": User wants to add a new login. 
+             Extract "name" (e.g. Netflix) and "url" (e.g. https://netflix.com) if possible.
+             Return JSON: { "action": "CREATE_CREDENTIAL", "data": { "name": "...", "url": "..." } }
+             
+          2. "GENERATE_PASSWORD": User wants a password.
+             Return JSON: { "action": "GENERATE_PASSWORD", "data": {} }
+
+          3. "NAVIGATE": User wants to go to a page.
+             Target pages: "dashboard", "settings", "import", "totp", "sharing".
+             Return JSON: { "action": "NAVIGATE", "data": { "target": "..." } }
+             
+          4. "UNKNOWN": If the request is unclear or unrelated to app actions.
+             Return JSON: { "action": "UNKNOWN", "response": "..." } (Put a friendly helpful message in response)
+
+          Rules:
+          - RETURN ONLY RAW JSON. NO MARKDOWN.
+          - Never ask for secrets.
+          - If the user provides a password in the prompt, IGNORE IT.
+          
+          User Prompt: "${payload.prompt || ""}"
+        `;
+        break;
+
       default:
         return { success: false, error: "Invalid mode" };
     }

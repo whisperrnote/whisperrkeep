@@ -1,6 +1,6 @@
 "use client";
 
-import { Sun, Moon, Monitor, User, LogOut, Key, Shield } from "lucide-react";
+import { Sun, Moon, Monitor, User, LogOut, Key, Shield, Sparkles } from "lucide-react";
 import { useTheme } from "@/app/providers";
 import Link from "next/link";
 import { useAppwrite } from "@/app/appwrite-provider";
@@ -9,10 +9,12 @@ import { useState } from "react";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import PasswordGenerator from "@/components/ui/PasswordGenerator";
 import { openAuthPopup } from "@/lib/authUrl";
+import { useAI } from "@/app/context/AIContext";
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAppwrite();
+  const { openAIModal } = useAI();
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -30,6 +32,17 @@ export function Navbar() {
           </span>
         </Link>
         <div className="flex items-center gap-2">
+          {/* AI Wand Button - Always visible */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={openAIModal}
+            className="text-primary hover:text-primary hover:bg-primary/10"
+            title="AI Assistant"
+          >
+            <Sparkles className="h-5 w-5" />
+          </Button>
+
           <button
             className="p-2 rounded-full hover:bg-accent"
             onClick={() => {

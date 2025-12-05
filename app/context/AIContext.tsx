@@ -9,6 +9,7 @@ import { AIModal } from "@/components/ai/AIModal";
 interface AIContextType {
   analyze: (mode: AnalysisMode, data: unknown) => Promise<unknown>;
   askAI: (prompt: string) => Promise<string>;
+  sendCommand: (prompt: string) => Promise<{ action: string; data?: unknown; response?: string }>;
   openAIModal: () => void;
   closeAIModal: () => void;
   isAIModalOpen: boolean;
@@ -80,6 +81,29 @@ export function AIProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const sendCommand = async (prompt: string) => {
+    setIsLoading(true);
+    try {
+      const response = await generateAIContent({
+        mode: 'COMMAND_INTENT',
+        prompt,
+      });
+
+      if (!response.success) throw new Error(response.error);
+      
+      try {
+        return JSON.parse(response.data || "{}");
+      } catch {
+        return { action: "UNKNOWN", response: response.data };
+      }
+    } catch (error) {
+        console.error("AI Command Failed", error);
+        throw error;
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
   const openAIModal = () => setIsAIModalOpen(true);
   const closeAIModal = () => setIsAIModalOpen(false);
 
@@ -88,6 +112,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
       value={{
         analyze,
         askAI,
+        sendCommand,
         openAIModal,
         closeAIModal,
         isAIModalOpen,
