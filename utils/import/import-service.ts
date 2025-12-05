@@ -292,6 +292,8 @@ export class ImportService {
                 url: cred.url,
                 username: cred.username,
                 password: cred.password,
+                // Ensure itemType is present, default to 'login' for backward compatibility
+                itemType: cred.itemType || "login", 
                 notes: cred.notes,
                 totpId: null, // Clear TOTP link initially
                 cardNumber: cred.cardNumber,
