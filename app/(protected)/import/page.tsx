@@ -7,10 +7,9 @@ import { Input } from "@/components/ui/Input";
 import { useAppwrite } from "@/app/appwrite-provider";
 import { validateBitwardenExport } from "@/utils/import/bitwarden-mapper";
 import { useBackgroundTask } from "@/app/context/BackgroundTaskContext";
-
-// Remove unused components
-// function ImportProgressIndicator...
-// function ImportResults...
+import { ImportPreviewModal } from "@/components/import/ImportPreviewModal";
+import { ImportItem } from "@/lib/import/deduplication";
+import { analyzeBitwardenExport } from "@/utils/import/bitwarden-mapper";
 
 export default function ImportPage() {
   const { user } = useAppwrite();
@@ -18,48 +17,59 @@ export default function ImportPage() {
   const [importType, setImportType] = useState<string>("bitwarden");
   const [file, setFile] = useState<File | null>(null);
   const [errorState, setErrorState] = useState<string | null>(null);
+  
+  // Preview Modal State
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewItems, setPreviewItems] = useState<ImportItem[]>([]);
+  // const [rawFileContent, setRawFileContent] = useState<string>(""); // Unused
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files?.[0] || null);
     setErrorState(null);
   };
 
-  const validateFile = async (file: File): Promise<string> => {
+  const parseAndPreview = async (file: File) => {
     try {
-      const text = await file.text();
+        const text = await file.text();
+        // setRawFileContent(text);
+        
+        let items: ImportItem[] = [];
 
-      if (importType === "bitwarden") {
-        const data = JSON.parse(text);
-        if (!validateBitwardenExport(data)) {
-          throw new Error(
-            "Invalid Bitwarden export format. Please export your vault as JSON from Bitwarden.",
-          );
+        if (importType === "bitwarden") {
+            const data = JSON.parse(text);
+            if (!validateBitwardenExport(data)) throw new Error("Invalid Bitwarden format");
+            
+            // Map to our internal structure for preview
+            const mapped = analyzeBitwardenExport(data, user?.$id || "");
+            items = mapped.credentials.map(c => ({
+                ...c,
+                _status: 'new'
+            }));
+        } else if (importType === "whisperrkeep") {
+            const data = JSON.parse(text);
+             if (!data.version && !data.credentials) throw new Error("Invalid WhisperrKeep format");
+             
+             items = (data.credentials || []).map((c: unknown) => ({
+                 ...(c as Partial<ImportItem>),
+                 _status: 'new'
+             }));
+        } else {
+            throw new Error("Preview not supported for this format yet");
         }
-      }
-      
-      if (importType === "whisperrkeep") {
-         try {
-             const data = JSON.parse(text);
-             if (!data.version && (!data.credentials && !data.folders && !data.totpSecrets)) {
-                 throw new Error("Invalid WhisperrKeep export format.");
-             }
-         } catch {
-             throw new Error("Invalid JSON file.");
-         }
-      }
 
-      return text;
+        if (items.length === 0) {
+            throw new Error("No items found in file");
+        }
+
+        setPreviewItems(items);
+        setIsPreviewOpen(true);
+
     } catch (error) {
-      if (error instanceof SyntaxError) {
-        throw new Error(
-          "Invalid JSON file. Please ensure you've exported the correct format.",
-        );
-      }
-      throw error;
+        throw error;
     }
   };
 
-  const handleImport = async () => {
+  const handleImportClick = async () => {
     if (!user) {
       setErrorState("You must be logged in to import data.");
       return;
@@ -78,18 +88,32 @@ export default function ImportPage() {
     setErrorState(null);
 
     try {
-      const fileContent = await validateFile(file);
-      
-      // Start the background import task
-      startImport(importType, fileContent, user.$id);
-      
+       // Validate first
+       await parseAndPreview(file);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Import failed with unknown error.";
+      const errorMessage = error instanceof Error ? error.message : "Import failed.";
       setErrorState(errorMessage);
     }
+  };
+
+  const handleFinalImport = (finalItems: ImportItem[]) => {
+      setIsPreviewOpen(false);
+      // We need to pass the FINAL deduplicated list to the background task
+      // Currently startImport takes raw string. We might need to update startImport 
+      // OR re-serialize the finalItems to a JSON string that the importer understands.
+      
+      // Strategy: Serialize finalItems into a specialized "internal-processed" format 
+      // OR just standard WhisperrKeep format which the importer already knows!
+      
+      const processedPayload = JSON.stringify({
+          version: 1,
+          credentials: finalItems,
+          folders: [], // We are simplifying to just creds for this specific dedupe flow for now
+          totpSecrets: []
+      });
+
+      // We send this as "whisperrkeep" type because it's now normalized JSON
+      startImport("whisperrkeep", processedPayload, user!.$id);
   };
 
   const isFileValid =
@@ -223,11 +247,11 @@ export default function ImportPage() {
               </div>
 
               <Button
-                onClick={handleImport}
+                onClick={handleImportClick}
                 disabled={globalImporting || !isFileValid}
                 className="w-full"
               >
-                {globalImporting ? "Import in Progress..." : "Start Import"}
+                {globalImporting ? "Import in Progress..." : "Preview & Import"}
               </Button>
               
               {errorState && (
@@ -298,6 +322,13 @@ export default function ImportPage() {
           </Card>
         </div>
       </div>
+      
+      <ImportPreviewModal 
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        rawItems={previewItems}
+        onConfirm={handleFinalImport}
+      />
     </div>
   );
 }
