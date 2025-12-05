@@ -58,11 +58,7 @@ export function analyzeBitwardenExport(
       deletedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      $sequence: 0,
-      $collectionId: "",
-      $databaseId: "",
-      $permissions: [],
-    };
+    } as unknown as Omit<Folders, "$id" | "$createdAt" | "$updatedAt">;
 
     mappedFolders.push(mappedFolder);
     // We'll need to generate IDs when creating, store index for now
@@ -147,11 +143,7 @@ export function analyzeBitwardenExport(
           passwordChangedAt: null,
           createdAt: baseCreatedAt,
           updatedAt: baseUpdatedAt,
-          $sequence: 0,
-          $collectionId: "",
-          $databaseId: "",
-          $permissions: [],
-        };
+        } as unknown as Omit<Credentials, "$id" | "$createdAt" | "$updatedAt">;
 
       mappedCredentials.push(credential);
       credentialsCount++;
@@ -179,11 +171,7 @@ export function analyzeBitwardenExport(
           lastUsedAt: null,
           createdAt: baseCreatedAt,
           updatedAt: baseUpdatedAt,
-          $sequence: 0,
-          $collectionId: "",
-          $databaseId: "",
-          $permissions: [],
-        };
+        } as unknown as Omit<TotpSecrets, "$id" | "$createdAt" | "$updatedAt">;
 
         mappedTotpSecrets.push(totpSecret);
         totpCount++;
