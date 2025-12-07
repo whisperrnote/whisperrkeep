@@ -1,4 +1,4 @@
-import { createCredential, createFolder, createTotpSecret } from "@/lib/appwrite";
+import { createCredential, createFolder, createTotpSecret, AppwriteService } from "@/lib/appwrite";
 import type { Credentials, TotpSecrets, Folders } from "@/types/appwrite.d";
 import type { BitwardenExport } from "./bitwarden-types";
 import {
@@ -27,6 +27,7 @@ export interface ImportResult {
     totpSecretsCreated: number;
     errors: number;
     skipped: number;
+    skippedExisting: number;
   };
   errors: string[];
   folderMapping: Map<string, string>;
@@ -51,6 +52,7 @@ export class ImportService {
         totpSecretsCreated: 0,
         errors: 0,
         skipped: 0,
+        skippedExisting: 0,
       },
       errors: [],
       folderMapping: new Map(),
@@ -91,6 +93,52 @@ export class ImportService {
         mappedData.folders.length +
         mappedData.credentials.length +
         mappedData.totpSecrets.length;
+
+      // Check against existing credentials
+      this.updateProgress({
+        stage: "parsing",
+        currentStep: 1,
+        totalSteps: 4,
+        message: "Checking for existing credentials...",
+        itemsProcessed: 0,
+        itemsTotal: totalItems,
+        errors: [],
+      });
+
+      try {
+        const existingCreds = await AppwriteService.listAllCredentials(userId);
+        const uniqueCredentials = [];
+        let skippedExisting = 0;
+
+        for (const cred of mappedData.credentials) {
+            const credUrl = cred.url ? cred.url.trim().toLowerCase() : "";
+            const credUser = cred.username ? cred.username.trim() : "";
+            const credPass = cred.password ? cred.password.trim() : "";
+
+            const isDuplicate = existingCreds.some(existing => {
+                const existUrl = existing.url ? existing.url.trim().toLowerCase() : "";
+                const existUser = existing.username ? existing.username.trim() : "";
+                const existPass = existing.password ? existing.password.trim() : "";
+                
+                return existUser === credUser && existPass === credPass && existUrl === credUrl;
+            });
+            
+            if (isDuplicate) {
+                skippedExisting++;
+            } else {
+                uniqueCredentials.push(cred);
+            }
+        }
+        
+        mappedData.credentials = uniqueCredentials;
+        result.summary.skippedExisting = skippedExisting;
+        
+        if (skippedExisting > 0) {
+             console.log(`[ImportService] Skipped ${skippedExisting} existing credentials.`);
+        }
+      } catch (e) {
+        console.warn("[ImportService] Failed to check existing credentials, proceeding with import.", e);
+      }
 
       // Stage 2: Import folders
       this.updateProgress({
@@ -198,6 +246,7 @@ export class ImportService {
         totpSecretsCreated: 0,
         errors: 0,
         skipped: 0,
+        skippedExisting: 0,
       },
       errors: [],
       folderMapping: new Map(),
@@ -410,9 +459,9 @@ export class ImportService {
   }
 
   private async throttle() {
-    // Basic throttling: 50ms delay between operations
+    // Basic throttling: 500ms delay between operations
     // This prevents flooding Appwrite with requests in a tight loop
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   private async importFolders(
@@ -534,9 +583,9 @@ export class ImportService {
     const clean: any = {
       userId: userId,
       itemType: cred.itemType || "login",
-      name: cred.name,
-      username: cred.username,
-      password: (cred.password || "").trim(),
+      name: String(cred.name || "").substring(0, 255),
+      username: String(cred.username || "").substring(0, 255),
+      password: String(cred.password || "").trim().substring(0, 1000),
       isFavorite: cred.isFavorite || false,
       isDeleted: cred.isDeleted || false,
       createdAt: new Date().toISOString(),
