@@ -15,7 +15,7 @@ import MasterPasswordVerificationDialog from "@/components/overlays/MasterPasswo
 
 export default function TOTPPage() {
   const [search, setSearch] = useState("");
-  const { user } = useAppwrite();
+  const { user, isVaultUnlocked } = useAppwrite();
   type TotpItem = {
     $id: string;
     issuer?: string | null;
@@ -41,6 +41,12 @@ export default function TOTPPage() {
 
   useEffect(() => {
     if (!user?.$id) return;
+
+    // Ensure vault is unlocked before fetching to prevent decryption errors
+    if (!isVaultUnlocked()) {
+      return;
+    }
+
     setLoading(true);
     Promise.all([listTotpSecrets(user.$id), listFolders(user.$id)])
       .then(([secrets, userFolders]) => {
@@ -53,7 +59,7 @@ export default function TOTPPage() {
         toast.error("Failed to load data.");
       })
       .finally(() => setLoading(false));
-  }, [user, showNew]);
+  }, [user, showNew, isVaultUnlocked]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -88,9 +94,13 @@ export default function TOTPPage() {
     algorithm: string = "SHA1",
   ): string => {
     try {
+      // Handle failed decryption or missing secret
+      if (!secret || secret.includes("[DECRYPTION_FAILED]")) return "Locked";
+
       // Sanitize: remove all spaces to ensure spaced/unspaced secrets yield same code
       const normalized = (secret || "").replace(/\s+/g, "");
       if (!normalized) return "------";
+
       authenticator.options = {
         ...authenticator.options,
         step: period || 30,
@@ -98,9 +108,11 @@ export default function TOTPPage() {
         // @ts-expect-error - algorithm type mismatch in some versions
         algorithm: algorithm || "SHA1",
       };
+
       return authenticator.generate(normalized);
-    } catch {
-      return "------";
+    } catch (err) {
+      console.error("TOTP Generation Error:", err);
+      return "Invalid";
     }
   };
 
@@ -200,9 +212,8 @@ export default function TOTPPage() {
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeDasharray={`${progress * 0.88} 88`}
-                  className={`transition-all duration-1000 ${
-                    timeRemaining <= 5 ? "text-red-500" : "text-primary"
-                  }`}
+                  className={`transition-all duration-1000 ${timeRemaining <= 5 ? "text-red-500" : "text-primary"
+                    }`}
                 />
               </svg>
             </div>
