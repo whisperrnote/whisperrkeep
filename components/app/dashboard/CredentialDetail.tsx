@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Credentials } from "@/types/appwrite";
 import { useAI } from "@/app/context/AIContext";
+import { useSudo } from "@/app/context/SudoContext";
 
 export default function CredentialDetail({
   credential,
@@ -27,7 +28,8 @@ export default function CredentialDetail({
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  
+  const { requestSudo } = useSudo();
+
   const { analyze } = useAI();
   const [urlSafety, setUrlSafety] = useState<{ safe: boolean; riskLevel: string; reason: string } | null>(null);
   const [checkingUrl, setCheckingUrl] = useState(false);
@@ -35,21 +37,21 @@ export default function CredentialDetail({
   const checkUrlSafety = useCallback(async (url: string) => {
     setCheckingUrl(true);
     try {
-        const result = (await analyze('URL_SAFETY', { url })) as { safe: boolean; riskLevel: string; reason: string };
-        if (result) {
-            setUrlSafety(result);
-        }
+      const result = (await analyze('URL_SAFETY', { url })) as { safe: boolean; riskLevel: string; reason: string };
+      if (result) {
+        setUrlSafety(result);
+      }
     } catch (e) {
-        console.error("Failed to check URL safety", e);
+      console.error("Failed to check URL safety", e);
     } finally {
-        setCheckingUrl(false);
+      setCheckingUrl(false);
     }
   }, [analyze]);
 
   // Check URL safety on mount if URL exists
   useEffect(() => {
     if (credential.url && !urlSafety && !checkingUrl) {
-        checkUrlSafety(credential.url);
+      checkUrlSafety(credential.url);
     }
   }, [credential.url, checkUrlSafety, checkingUrl, urlSafety]);
 
@@ -208,18 +210,16 @@ export default function CredentialDetail({
     <div
       ref={rootRef}
       className={`
-        ${
-          isMobile
-            ? "fixed inset-0 z-50 bg-background"
-            : "fixed top-0 right-0 h-full w-[400px] z-40 bg-background border-l border-border"
+        ${isMobile
+          ? "fixed inset-0 z-50 bg-background"
+          : "fixed top-0 right-0 h-full w-[400px] z-40 bg-background border-l border-border"
         }
         shadow-2xl flex flex-col transition-transform duration-300 ease-out
-        ${
-          isVisible
-            ? "translate-x-0"
-            : isMobile
-              ? "translate-x-full"
-              : "translate-x-full"
+        ${isVisible
+          ? "translate-x-0"
+          : isMobile
+            ? "translate-x-full"
+            : "translate-x-full"
         }
       `}
     >
@@ -271,31 +271,30 @@ export default function CredentialDetail({
               </h1>
               {credential.url && (
                 <div className="flex flex-col gap-1 items-start">
-                    <a
+                  <a
                     href={credential.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-700 text-sm inline-flex items-center"
-                    >
+                  >
                     <Globe className="h-3 w-3 mr-1" />
                     {(() => {
-                        try {
+                      try {
                         return new URL(credential.url).hostname;
-                        } catch {
+                      } catch {
                         return credential.url;
-                        }
+                      }
                     })()}
-                    </a>
-                    {urlSafety && (
-                        <div className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 border ${
-                            urlSafety.safe 
-                            ? "bg-green-50 text-green-700 border-green-200" 
-                            : "bg-red-50 text-red-700 border-red-200"
-                        }`}>
-                            {urlSafety.safe ? <ShieldCheck className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
-                            <span>{urlSafety.riskLevel} Risk: {urlSafety.reason}</span>
-                        </div>
-                    )}
+                  </a>
+                  {urlSafety && (
+                    <div className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 border ${urlSafety.safe
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : "bg-red-50 text-red-700 border-red-200"
+                      }`}>
+                      {urlSafety.safe ? <ShieldCheck className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
+                      <span>{urlSafety.riskLevel} Risk: {urlSafety.reason}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -341,7 +340,15 @@ export default function CredentialDetail({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => {
+                    if (!showPassword) {
+                      requestSudo({
+                        onSuccess: () => setShowPassword(true)
+                      });
+                    } else {
+                      setShowPassword(false);
+                    }
+                  }}
                   className="h-6 px-2"
                 >
                   {showPassword ? (
@@ -353,7 +360,11 @@ export default function CredentialDetail({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleCopy(credential.password, "password")}
+                  onClick={() => {
+                    requestSudo({
+                      onSuccess: () => handleCopy(credential.password, "password")
+                    });
+                  }}
                   className="h-6 px-2"
                 >
                   <Copy className="h-3 w-3" />

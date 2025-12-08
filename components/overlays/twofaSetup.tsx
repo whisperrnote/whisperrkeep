@@ -17,7 +17,7 @@ import {
   APPWRITE_COLLECTION_USER_ID,
   appwriteAccount,
 } from "@/lib/appwrite";
-import MasterPasswordVerificationDialog from "@/components/overlays/MasterPasswordVerificationDialog";
+import { useSudo } from "@/app/context/SudoContext";
 import type { Models } from "appwrite";
 
 export default function TwofaSetup({
@@ -63,7 +63,8 @@ export default function TwofaSetup({
   const [disableOption, setDisableOption] = useState<
     "disable_only" | "remove_factors"
   >("disable_only");
-  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+
+  const { requestSudo } = useSudo();
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -448,8 +449,8 @@ export default function TwofaSetup({
                 <div className="text-sm">
                   <p className="font-medium">Currently enabled factors:</p>
                   {currentFactors?.totp ||
-                  currentFactors?.email ||
-                  currentFactors?.phone ? (
+                    currentFactors?.email ||
+                    currentFactors?.phone ? (
                     <ul className="list-disc list-inside mt-1 text-muted-foreground">
                       {currentFactors?.totp && (
                         <li>Authenticator App (TOTP)</li>
@@ -698,16 +699,7 @@ export default function TwofaSetup({
         {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
 
         {/* Disable 2FA Confirmation Dialog */}
-        {isVerificationOpen && (
-          <MasterPasswordVerificationDialog
-            open={isVerificationOpen}
-            onClose={() => setIsVerificationOpen(false)}
-            onSuccess={() => {
-              setIsVerificationOpen(false);
-              executeDisable();
-            }}
-          />
-        )}
+
 
         {showDisableConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -783,7 +775,9 @@ export default function TwofaSetup({
                   variant="destructive"
                   onClick={() => {
                     setShowDisableConfirm(false);
-                    setIsVerificationOpen(true);
+                    requestSudo({
+                      onSuccess: () => executeDisable()
+                    });
                   }}
                   disabled={loading}
                 >

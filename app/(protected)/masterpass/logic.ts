@@ -1,4 +1,5 @@
 import { logDebug, logError } from "@/lib/logger";
+import { markSudoActive } from "@/lib/sudo-mode";
 
 // Enhanced crypto configuration for maximum security with optimal performance
 export class MasterPassCrypto {
@@ -78,6 +79,7 @@ export class MasterPassCrypto {
     }
     this.isUnlocked = true;
     sessionStorage.setItem("vault_unlocked", Date.now().toString());
+    markSudoActive();
     return true;
   }
 
@@ -93,6 +95,7 @@ export class MasterPassCrypto {
       if (keychainSuccess) {
         this.isUnlocked = true;
         sessionStorage.setItem("vault_unlocked", Date.now().toString());
+        markSudoActive();
         return true;
       }
 
@@ -100,12 +103,13 @@ export class MasterPassCrypto {
       if (isFirstTime) {
         // Generate a random MEK for new users
         this.masterKey = await this.generateRandomMEK();
-        
+
         // Create keychain entry immediately
         await this.createKeychainEntry(this.masterKey, masterPassword, userId);
 
         this.isUnlocked = true;
         sessionStorage.setItem("vault_unlocked", Date.now().toString());
+        markSudoActive();
         return true;
       }
 
@@ -121,7 +125,7 @@ export class MasterPassCrypto {
     if (!this.masterKey) {
       throw new Error("Vault is locked");
     }
-    
+
     // Re-wrap MEK with new password
     await this.createKeychainEntry(this.masterKey, newPassword, userId);
   }
@@ -143,10 +147,10 @@ export class MasterPassCrypto {
     try {
       const { AppwriteService } = await import("../../../lib/appwrite");
       const keychainEntries = await AppwriteService.listKeychainEntries(userId);
-      
+
       // Find password type entry
       const passwordEntry = keychainEntries.find(k => k.type === 'password');
-      
+
       if (!passwordEntry) {
         return false; // No keychain entry found
       }
@@ -155,7 +159,7 @@ export class MasterPassCrypto {
       const salt = new Uint8Array(
         atob(passwordEntry.salt).split("").map(c => c.charCodeAt(0))
       );
-      
+
       const authKey = await this.deriveKey(password, salt);
 
       // Unwrap the MEK
@@ -198,7 +202,7 @@ export class MasterPassCrypto {
   private async createKeychainEntry(mek: CryptoKey, password: string, userId: string): Promise<void> {
     try {
       const { AppwriteService } = await import("../../../lib/appwrite");
-      
+
       // Generate new random salt for the AuthKey
       const salt = crypto.getRandomValues(new Uint8Array(MasterPassCrypto.SALT_SIZE));
       const authKey = await this.deriveKey(password, salt);
@@ -306,10 +310,10 @@ export class MasterPassCrypto {
 
   // Encrypt data before sending to database
   async encryptData(data: unknown): Promise<string> {
-    logDebug("encryptData called", { 
+    logDebug("encryptData called", {
       isVaultUnlocked: this.isVaultUnlocked(),
       hasMasterKey: !!this.masterKey,
-      isUnlockedFlag: this.isUnlocked 
+      isUnlockedFlag: this.isUnlocked
     });
 
     if (!this.isVaultUnlocked()) {

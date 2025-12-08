@@ -23,8 +23,8 @@ import CredentialDialog from "@/components/app/dashboard/CredentialDialog";
 import VaultGuard from "@/components/layout/VaultGuard";
 import { Dialog } from "@/components/ui/Dialog";
 import CredentialDetail from "@/components/app/dashboard/CredentialDetail";
-import MasterPasswordVerificationDialog from "@/components/overlays/MasterPasswordVerificationDialog";
 import { useAI } from "@/app/context/AIContext";
+import { useSudo } from "@/app/context/SudoContext";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -54,9 +54,9 @@ export default function DashboardPage() {
   // Register the modal opener
   useEffect(() => {
     registerCreateModal((prefill) => {
-        setEditCredential(null);
-        setDialogPrefill(prefill);
-        setShowDialog(true);
+      setEditCredential(null);
+      setDialogPrefill(prefill);
+      setShowDialog(true);
     });
   }, [registerCreateModal]);
 
@@ -80,7 +80,7 @@ export default function DashboardPage() {
   const [credentialToDelete, setCredentialToDelete] =
     useState<Credentials | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+  const { requestSudo } = useSudo();
 
   // AI Organization State
   const [organizing, setOrganizing] = useState(false);
@@ -114,7 +114,7 @@ export default function DashboardPage() {
   // AI Smart Organization Handler
   const handleSmartOrganize = async () => {
     if (!user?.$id || organizing) return;
-    
+
     setOrganizing(true);
     const toastId = toast.loading("AI is analyzing your vault structure...");
 
@@ -123,9 +123,9 @@ export default function DashboardPage() {
       // Let's focus on uncategorized items first for safety, or let user decide.
       // For V1, let's reorganize everything to ensure a clean state.
       // Passing all credentials to the sanitizer (it strips secrets).
-      
+
       const analysisResult = (await analyze('VAULT_ORGANIZE', allCredentials)) as { [folderName: string]: string[] };
-      
+
       // Expected result: { "Finance": ["id1", "id2"], "Social": ["id3"] }
       if (!analysisResult || Object.keys(analysisResult).length === 0) {
         toast.error("AI couldn't find a better organization structure.", { id: toastId });
@@ -138,14 +138,14 @@ export default function DashboardPage() {
       // For better UX, we'll auto-apply or show a summary dialog. 
       // Let's implement the application logic here directly for the hackathon MVP speed,
       // but ideally this should be a "Review Changes" modal.
-      
+
       // Triggering the confirmation modal
       // (We'll reuse the delete modal state structure or add a new one if time permits, 
       // but for now let's just use window.confirm to be safe and fast)
-      
+
       const confirmMsg = `AI suggests creating/merging into ${Object.keys(analysisResult).length} folders. Proceed?`;
       if (window.confirm(confirmMsg)) {
-         await applyOrganizationChanges(analysisResult);
+        await applyOrganizationChanges(analysisResult);
       }
 
     } catch (error) {
@@ -187,27 +187,27 @@ export default function DashboardPage() {
         // 3. Move credentials to folder
         // We do this in parallel batches to speed it up
         await Promise.all(credentialIds.map(async (credId) => {
-            // Check if credential actually exists and needs moving
-            const cred = allCredentials.find(c => c.$id === credId);
-            if (cred && cred.folderId !== folderId) {
-                await updateCredential(credId, { folderId });
-            }
+          // Check if credential actually exists and needs moving
+          const cred = allCredentials.find(c => c.$id === credId);
+          if (cred && cred.folderId !== folderId) {
+            await updateCredential(credId, { folderId });
+          }
         }));
       }
 
       toast.success("Vault organized successfully!", { id: toastId });
       // Refresh UI
-      window.location.reload(); 
+      window.location.reload();
     } catch (error) {
-        console.error("Failed to apply changes", error);
-        toast.error("Partial failure during organization.", { id: toastId });
+      console.error("Failed to apply changes", error);
+      toast.error("Partial failure during organization.", { id: toastId });
     }
   };
 
   useEffect(() => {
     if (user?.$id) {
       loadAllCredentials();
-      
+
       listFolders(user.$id)
         .then(setFolders)
         .catch((err: unknown) => {
@@ -255,7 +255,7 @@ export default function DashboardPage() {
 
   const openDeleteModal = (cred: Credentials) => {
     setCredentialToDelete(cred);
-    setIsVerificationOpen(true);
+    setIsDeleteModalOpen(true);
   };
 
   const handleDelete = async () => {
@@ -514,16 +514,7 @@ export default function DashboardPage() {
           onSaved={refreshCredentials}
         />
 
-        {isVerificationOpen && (
-          <MasterPasswordVerificationDialog
-            open={isVerificationOpen}
-            onClose={() => setIsVerificationOpen(false)}
-            onSuccess={() => {
-              setIsVerificationOpen(false);
-              setIsDeleteModalOpen(true);
-            }}
-          />
-        )}
+
 
         {/* Delete Confirmation Dialog */}
         {isDeleteModalOpen && (
@@ -544,7 +535,11 @@ export default function DashboardPage() {
                 >
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleDelete}>
+                <Button variant="destructive" onClick={() => {
+                  requestSudo({
+                    onSuccess: () => handleDelete()
+                  });
+                }}>
                   Delete
                 </Button>
               </div>

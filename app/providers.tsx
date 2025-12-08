@@ -56,26 +56,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 import { AppwriteProvider } from "./appwrite-provider";
 import { BackgroundTaskProvider } from "./context/BackgroundTaskContext";
 import { AIProvider } from "./context/AIContext";
+import { SudoProvider } from "./context/SudoContext";
 import { Toaster } from "react-hot-toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <AppwriteProvider>
-        <BackgroundTaskProvider>
-          <AIProvider>
-            {children}
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                style: {
-                  background: "#333",
-                  color: "#fff",
-                },
-              }}
-            />
-          </AIProvider>
-        </BackgroundTaskProvider>
+        <SudoProvider>
+          <BackgroundTaskProvider>
+            <AIProvider>
+              {children}
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  style: {
+                    background: "#333",
+                    color: "#fff",
+                  },
+                }}
+              />
+            </AIProvider>
+          </BackgroundTaskProvider>
+        </SudoProvider>
       </AppwriteProvider>
     </ThemeProvider>
   );

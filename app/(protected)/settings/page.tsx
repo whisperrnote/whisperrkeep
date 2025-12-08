@@ -46,8 +46,8 @@ import {
   resetMasterpassAndWipe,
 } from "@/lib/appwrite";
 import toast from "react-hot-toast";
-import MasterPasswordVerificationDialog from "@/components/overlays/MasterPasswordVerificationDialog";
 import VaultGuard from "@/components/layout/VaultGuard";
+import { useSudo } from "@/app/context/SudoContext";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -64,8 +64,9 @@ export default function SettingsPage() {
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] =
     useState(false);
   const [deleteStep, setDeleteStep] = useState<
-    "initial" | "confirm" | "verify"
+    "initial" | "confirm"
   >("initial");
+  const { requestSudo } = useSudo();
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
     useState(false);
   const [passwords, setPasswords] = useState({
@@ -116,12 +117,12 @@ export default function SettingsPage() {
         const items = Array.isArray(res)
           ? res
           : res &&
-              (res as { documents?: FolderItem[]; items?: FolderItem[] })
-                .documents
+            (res as { documents?: FolderItem[]; items?: FolderItem[] })
+              .documents
             ? (res as { documents?: FolderItem[] }).documents!
             : res &&
-                (res as { documents?: FolderItem[]; items?: FolderItem[] })
-                  .items
+              (res as { documents?: FolderItem[]; items?: FolderItem[] })
+                .items
               ? (res as { items?: FolderItem[] }).items!
               : [];
         setFolders(items);
@@ -287,10 +288,10 @@ export default function SettingsPage() {
       loadPasskeys();
       setIsDeletePasskeyModalOpen(false);
       setPasskeyToDelete(null);
-      
+
       // If no passkeys left, update user doc flag
       if (passkeys.length <= 1) {
-         await AppwriteService.removePasskey(user!.$id);
+        await AppwriteService.removePasskey(user!.$id);
       }
     } catch (e) {
       console.error(e);
@@ -349,12 +350,12 @@ export default function SettingsPage() {
   };
 
   const onExportClick = () => {
-      setIsExportModalOpen(true);
+    setIsExportModalOpen(true);
   };
 
   const confirmExport = () => {
-      setIsExportModalOpen(false);
-      handleExportData(false, exportOptions);
+    setIsExportModalOpen(false);
+    handleExportData(false, exportOptions);
   };
 
   const handleDeleteAccount = async () => {
@@ -420,10 +421,10 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await appwriteAccount.updatePassword(passwords.new, passwords.current);
-      
+
       // Re-wrap MEK with new password
       if (user?.$id) {
-         await masterPassCrypto.changeMasterPassword(passwords.new, user.$id);
+        await masterPassCrypto.changeMasterPassword(passwords.new, user.$id);
       }
 
       toast.success("Password updated successfully!");
@@ -610,7 +611,7 @@ export default function SettingsPage() {
                       + Add Passkey
                     </Button>
                   </div>
-                  
+
                   {passkeys.length > 0 ? (
                     <div className="space-y-2">
                       {passkeys.map((pk) => (
@@ -922,38 +923,38 @@ export default function SettingsPage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 Select the data you want to export. Your data will be exported as a JSON file.
               </p>
-              
+
               <div className="space-y-4 mt-4">
-                 <div className="flex items-center space-x-2">
-                    <input 
-                        type="checkbox" 
-                        id="exp-creds" 
-                        checked={exportOptions.credentials} 
-                        onChange={(e) => setExportOptions({...exportOptions, credentials: e.target.checked})}
-                        className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <label htmlFor="exp-creds" className="text-sm font-medium">Login Credentials</label>
-                 </div>
-                 <div className="flex items-center space-x-2">
-                    <input 
-                        type="checkbox" 
-                        id="exp-totp" 
-                        checked={exportOptions.totpSecrets} 
-                        onChange={(e) => setExportOptions({...exportOptions, totpSecrets: e.target.checked})}
-                        className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <label htmlFor="exp-totp" className="text-sm font-medium">TOTP Secrets</label>
-                 </div>
-                 <div className="flex items-center space-x-2">
-                    <input 
-                        type="checkbox" 
-                        id="exp-folders" 
-                        checked={exportOptions.folders} 
-                        onChange={(e) => setExportOptions({...exportOptions, folders: e.target.checked})}
-                        className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <label htmlFor="exp-folders" className="text-sm font-medium">Folders</label>
-                 </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="exp-creds"
+                    checked={exportOptions.credentials}
+                    onChange={(e) => setExportOptions({ ...exportOptions, credentials: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="exp-creds" className="text-sm font-medium">Login Credentials</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="exp-totp"
+                    checked={exportOptions.totpSecrets}
+                    onChange={(e) => setExportOptions({ ...exportOptions, totpSecrets: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="exp-totp" className="text-sm font-medium">TOTP Secrets</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="exp-folders"
+                    checked={exportOptions.folders}
+                    onChange={(e) => setExportOptions({ ...exportOptions, folders: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="exp-folders" className="text-sm font-medium">Folders</label>
+                </div>
               </div>
 
               <div className="mt-6 flex justify-end gap-2">
@@ -967,7 +968,7 @@ export default function SettingsPage() {
             </div>
           </Dialog>
         )}
-        
+
         {isDeleteAccountModalOpen && deleteStep === "initial" && (
           <Dialog open={isDeleteAccountModalOpen} onClose={resetDeleteFlow}>
             <div className="p-6">
@@ -1005,21 +1006,20 @@ export default function SettingsPage() {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => setDeleteStep("verify")}
+                  onClick={() => {
+                    // trigger sudo
+                    // close the delete warning dialog? Or keep it open until success?
+                    // Usually we close warning then show sudo.
+                    requestSudo({
+                      onSuccess: handleDeleteAccount
+                    });
+                  }}
                 >
                   Delete Forever
                 </Button>
               </div>
             </div>
           </Dialog>
-        )}
-
-        {isDeleteAccountModalOpen && deleteStep === "verify" && (
-          <MasterPasswordVerificationDialog
-            open={isDeleteAccountModalOpen}
-            onClose={resetDeleteFlow}
-            onSuccess={handleDeleteAccount}
-          />
         )}
 
         {isResetModalOpen && (
@@ -1181,7 +1181,7 @@ export default function SettingsPage() {
             loadPasskeys();
           }}
         />
-        
+
         {passkeyRenameOpen && (
           <Dialog open={passkeyRenameOpen} onClose={() => setPasskeyRenameOpen(false)}>
             <div className="p-6">

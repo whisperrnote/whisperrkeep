@@ -11,7 +11,7 @@ import { authenticator } from "otplib";
 import { Dialog } from "@/components/ui/Dialog";
 import toast from "react-hot-toast";
 import VaultGuard from "@/components/layout/VaultGuard";
-import MasterPasswordVerificationDialog from "@/components/overlays/MasterPasswordVerificationDialog";
+import { useSudo } from "@/app/context/SudoContext";
 
 export default function TOTPPage() {
   const [search, setSearch] = useState("");
@@ -36,8 +36,8 @@ export default function TOTPPage() {
     id: string | null;
   }>({ open: false, id: null });
   const [editingTotp, setEditingTotp] = useState<TotpItem | null>(null);
-  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
-  const [totpToDelete, setTotpToDelete] = useState<string | null>(null);
+
+  const { requestSudo } = useSudo();
 
   // Fix infinite loop by removing unstable function reference from dependencies
   // usage of isVaultUnlocked inside effect is sufficient
@@ -137,8 +137,7 @@ export default function TOTPPage() {
   };
 
   const openDeleteDialog = (id: string) => {
-    setTotpToDelete(id);
-    setIsVerificationOpen(true);
+    setDeleteDialog({ open: true, id });
   };
 
   const getTimeRemaining = (period: number = 30): number => {
@@ -333,16 +332,6 @@ export default function TOTPPage() {
           }}
           initialData={editingTotp || undefined}
         />
-        {isVerificationOpen && (
-          <MasterPasswordVerificationDialog
-            open={isVerificationOpen}
-            onClose={() => setIsVerificationOpen(false)}
-            onSuccess={() => {
-              setIsVerificationOpen(false);
-              setDeleteDialog({ open: true, id: totpToDelete });
-            }}
-          />
-        )}
         {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialog.open}
@@ -428,9 +417,12 @@ export default function TOTPPage() {
               <Button
                 variant="destructive"
                 className="flex-1"
-                onClick={async () => {
-                  if (deleteDialog.id) await handleDelete(deleteDialog.id);
-                  setDeleteDialog({ open: false, id: null });
+                onClick={() => {
+                  if (deleteDialog.id) {
+                    requestSudo({
+                      onSuccess: () => handleDelete(deleteDialog.id!)
+                    });
+                  }
                 }}
               >
                 Delete
