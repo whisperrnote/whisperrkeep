@@ -24,7 +24,6 @@ import {
   masterPassCrypto,
 } from "@/app/(protected)/masterpass/logic";
 import { useAppwrite } from "@/app/appwrite-provider";
-import TwofaSetup from "@/components/overlays/twofaSetup";
 import { PasskeySetup } from "@/components/overlays/passkeySetup";
 import {
   appwriteAccount,
@@ -35,7 +34,6 @@ import {
   updateFolder,
   deleteFolder,
   listFolders,
-  listMfaFactors,
   Query,
 } from "@/lib/appwrite";
 import {
@@ -59,8 +57,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [dangerLoading, setDangerLoading] = useState(false);
   const [vaultTimeout, setVaultTimeoutState] = useState(getVaultTimeout());
-  const [showTwofa, setShowTwofa] = useState(false);
-  const [twofaEnabled, setTwofaEnabled] = useState(false);
+  const [vaultTimeout, setVaultTimeoutState] = useState(getVaultTimeout());
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] =
     useState(false);
   const [deleteStep, setDeleteStep] = useState<
@@ -134,85 +131,7 @@ export default function SettingsPage() {
     loadFolders();
   }, [user]);
 
-  const fetchTwofaStatus = useCallback(async () => {
-    try {
-      if (!user?.$id) return;
 
-      // Check MFA status directly from Appwrite
-      await listMfaFactors();
-      const account = await appwriteAccount.get();
-      const isEnforced = account.mfa || false;
-
-      setTwofaEnabled(isEnforced);
-    } catch (error) {
-      console.error("Failed to fetch 2FA status:", error);
-    }
-  }, [user?.$id]);
-
-  const syncMfaStatus = useCallback(async () => {
-    if (!user?.$id) return;
-
-    try {
-      // Get MFA status directly from Appwrite (source of truth)
-      await listMfaFactors();
-      const account = await appwriteAccount.get();
-      const appwriteMfaEnabled = account.mfa || false;
-
-      // Get current database status
-      const userDocResponse = await appwriteDatabases.listDocuments(
-        APPWRITE_DATABASE_ID,
-        APPWRITE_COLLECTION_USER_ID,
-        [Query.equal("userId", user.$id)],
-      );
-
-      if (userDocResponse.documents.length > 0) {
-        const userDoc = userDocResponse.documents[0];
-        const databaseMfaEnabled = userDoc.twofa === true;
-
-        // Check if they're out of sync
-        if (databaseMfaEnabled !== appwriteMfaEnabled) {
-          console.log(
-            `MFA status out of sync. Appwrite: ${appwriteMfaEnabled}, Database: ${databaseMfaEnabled}. Syncing...`,
-          );
-
-          // Update database to match Appwrite (source of truth)
-          await appwriteDatabases.updateDocument(
-            APPWRITE_DATABASE_ID,
-            APPWRITE_COLLECTION_USER_ID,
-            userDoc.$id,
-            { twofa: appwriteMfaEnabled },
-          );
-
-          // Update local state to reflect the correct status
-          setTwofaEnabled(appwriteMfaEnabled);
-          console.log(
-            `MFA status synced: database updated to ${appwriteMfaEnabled}`,
-          );
-        } else {
-          // Already in sync, just update local state
-          setTwofaEnabled(appwriteMfaEnabled);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to sync MFA status:", error);
-      // Fallback to regular status check
-      fetchTwofaStatus();
-    }
-  }, [user?.$id, fetchTwofaStatus]);
-
-  // Fetch latest 2fa status on mount and when dialog closes
-  useEffect(() => {
-    if (user?.$id) {
-      fetchTwofaStatus();
-    }
-  }, [user?.$id, showTwofa, fetchTwofaStatus]);
-
-  // Sync and validate MFA status between Appwrite and database on page load
-  useEffect(() => {
-    if (user?.$id) {
-      syncMfaStatus();
-    }
-  }, [user?.$id, syncMfaStatus]);
 
   // Fetch passkey status
   const loadPasskeys = useCallback(async () => {
@@ -590,16 +509,7 @@ export default function SettingsPage() {
                   <Key className="h-4 w-4" />
                   Change Password
                 </Button>
-                <Button
-                  variant={twofaEnabled ? "default" : "outline"}
-                  className="w-full justify-start gap-2"
-                  onClick={() => setShowTwofa(true)}
-                >
-                  <Shield className="h-4 w-4" />
-                  {twofaEnabled
-                    ? "✅ Two-Factor Authentication Enabled"
-                    : "Setup Two-Factor Authentication"}
-                </Button>
+
 
                 <div className="pt-4 border-t space-y-3">
                   <div className="flex items-center justify-between">
@@ -895,25 +805,10 @@ export default function SettingsPage() {
               className="gap-2 text-destructive hover:text-destructive"
               onClick={logout}
             >
-              <LogOut className="h-4 w-4" />
               Logout
             </Button>
           </div>
         </div>
-        {showTwofa && (
-          <TwofaSetup
-            open={showTwofa}
-            onClose={() => {
-              setShowTwofa(false);
-              // Refresh 2FA status after dialog closes
-              setTimeout(fetchTwofaStatus, 500);
-            }}
-            user={user ? { $id: user.$id, email: user.email } : null}
-            onStatusChange={(enabled) => {
-              setTwofaEnabled(enabled);
-              // Also refresh from database to ensure consistency
-              setTimeout(fetchTwofaStatus, 500);
-            }}
           />
         )}
         {isExportModalOpen && (
