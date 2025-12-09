@@ -1,5 +1,5 @@
 import { logDebug, logError } from "@/lib/logger";
-import { markSudoActive } from "@/lib/sudo-mode";
+import { markSudoActive, resetSudo } from "@/lib/sudo-mode";
 
 // Enhanced crypto configuration for maximum security with optimal performance
 export class MasterPassCrypto {
@@ -78,7 +78,9 @@ export class MasterPassCrypto {
       return false;
     }
     this.isUnlocked = true;
-    sessionStorage.setItem("vault_unlocked", Date.now().toString());
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.setItem("vault_unlocked", Date.now().toString());
+    }
     markSudoActive();
     return true;
   }
@@ -94,7 +96,9 @@ export class MasterPassCrypto {
       const keychainSuccess = await this.unlockWithKeychain(masterPassword, userId);
       if (keychainSuccess) {
         this.isUnlocked = true;
-        sessionStorage.setItem("vault_unlocked", Date.now().toString());
+        if (typeof sessionStorage !== "undefined") {
+          sessionStorage.setItem("vault_unlocked", Date.now().toString());
+        }
         markSudoActive();
         return true;
       }
@@ -108,7 +112,9 @@ export class MasterPassCrypto {
         await this.createKeychainEntry(this.masterKey, masterPassword, userId);
 
         this.isUnlocked = true;
-        sessionStorage.setItem("vault_unlocked", Date.now().toString());
+        if (typeof sessionStorage !== "undefined") {
+          sessionStorage.setItem("vault_unlocked", Date.now().toString());
+        }
         markSudoActive();
         return true;
       }
@@ -257,7 +263,10 @@ export class MasterPassCrypto {
   lock(): void {
     this.masterKey = null;
     this.isUnlocked = false;
-    sessionStorage.removeItem("vault_unlocked");
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem("vault_unlocked");
+    }
+    resetSudo();
   }
 
   // Reset master password (clear vault and force new setup)
@@ -275,6 +284,7 @@ export class MasterPassCrypto {
 
   // Get timeout setting from localStorage or use default
   private getTimeoutSetting(): number {
+    if (typeof localStorage === "undefined") return MasterPassCrypto.DEFAULT_TIMEOUT;
     const saved = localStorage.getItem("vault_timeout_minutes");
     return saved
       ? parseInt(saved) * 60 * 1000
@@ -283,11 +293,14 @@ export class MasterPassCrypto {
 
   // Set timeout setting
   static setTimeoutMinutes(minutes: number): void {
-    localStorage.setItem("vault_timeout_minutes", minutes.toString());
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("vault_timeout_minutes", minutes.toString());
+    }
   }
 
   // Get timeout in minutes for UI
   static getTimeoutMinutes(): number {
+    if (typeof localStorage === "undefined") return 10;
     const saved = localStorage.getItem("vault_timeout_minutes");
     return saved ? parseInt(saved) : 10; // default 10 minutes
   }
@@ -296,13 +309,15 @@ export class MasterPassCrypto {
   isVaultUnlocked(): boolean {
     if (!this.isUnlocked || !this.masterKey) return false;
 
-    const unlockTime = sessionStorage.getItem("vault_unlocked");
-    if (unlockTime) {
-      const elapsed = Date.now() - parseInt(unlockTime);
-      const timeout = this.getTimeoutSetting();
-      if (elapsed > timeout) {
-        this.lockApplication();
-        return false;
+    if (typeof sessionStorage !== "undefined") {
+      const unlockTime = sessionStorage.getItem("vault_unlocked");
+      if (unlockTime) {
+        const elapsed = Date.now() - parseInt(unlockTime);
+        const timeout = this.getTimeoutSetting();
+        if (elapsed > timeout) {
+          this.lockApplication();
+          return false;
+        }
       }
     }
     return true;
@@ -409,9 +424,12 @@ export class MasterPassCrypto {
     // Clear all decrypted data from memory
     this.masterKey = null;
     this.isUnlocked = false;
+    resetSudo();
 
     // Clear session storage
-    sessionStorage.removeItem("vault_unlocked");
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem("vault_unlocked");
+    }
 
     // Clear any cached decrypted data
     this.clearDecryptedCache();
@@ -434,10 +452,12 @@ export class MasterPassCrypto {
   updateActivity(): void {
     if (this.isUnlocked) {
       // Throttle updates to once per second to avoid rapid event bursts
-      const last = sessionStorage.getItem("vault_unlocked");
-      const now = Date.now();
-      if (!last || now - parseInt(last) >= 1000) {
-        sessionStorage.setItem("vault_unlocked", now.toString());
+      if (typeof sessionStorage !== "undefined") {
+        const last = sessionStorage.getItem("vault_unlocked");
+        const now = Date.now();
+        if (!last || now - parseInt(last) >= 1000) {
+          sessionStorage.setItem("vault_unlocked", now.toString());
+        }
       }
     }
   }

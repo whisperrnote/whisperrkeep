@@ -2,8 +2,6 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import SudoModal from "@/components/overlays/SudoModal";
-import { masterPassCrypto } from "@/app/(protected)/masterpass/logic";
-
 import { markSudoActive, isSudoActive } from "@/lib/sudo-mode";
 
 interface SudoOptions {
