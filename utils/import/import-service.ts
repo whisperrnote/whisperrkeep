@@ -125,6 +125,15 @@ export class ImportService {
             if (t.secretKey) existingTotpMap.add(t.secretKey.trim());
         });
 
+        // Index existing Credentials for O(1) lookup
+        const existingCredsSet = new Set<string>();
+        for (const existing of existingCreds) {
+            const existUrl = this.normalizeUrl(existing.url);
+            const existUser = existing.username ? existing.username.trim() : "";
+            const existPass = existing.password ? existing.password.trim() : "";
+            existingCredsSet.add(`${existUrl}|${existUser}|${existPass}`);
+        }
+
         // Deduplicate Credentials
         const uniqueCredentials = [];
         let skippedExisting = 0;
@@ -133,17 +142,10 @@ export class ImportService {
             const credUrl = this.normalizeUrl(cred.url);
             const credUser = cred.username ? cred.username.trim() : "";
             const credPass = cred.password ? cred.password.trim() : "";
-
-            const isDuplicate = existingCreds.some(existing => {
-                const existUrl = this.normalizeUrl(existing.url);
-                const existUser = existing.username ? existing.username.trim() : "";
-                const existPass = existing.password ? existing.password.trim() : "";
-                
-                // Match if Username AND Password match AND (URL matches OR both URLs are empty)
-                return existUser === credUser && existPass === credPass && existUrl === credUrl;
-            });
             
-            if (isDuplicate) {
+            const key = `${credUrl}|${credUser}|${credPass}`;
+
+            if (existingCredsSet.has(key)) {
                 skippedExisting++;
             } else {
                 uniqueCredentials.push(cred);
@@ -340,6 +342,15 @@ export class ImportService {
             if (t.secretKey) existingTotpMap.add(t.secretKey.trim());
         });
 
+        // Index existing Credentials for O(1) lookup
+        const existingCredsSet = new Set<string>();
+        for (const existing of existingCreds) {
+            const existUrl = this.normalizeUrl(existing.url);
+            const existUser = existing.username ? existing.username.trim() : "";
+            const existPass = existing.password ? existing.password.trim() : "";
+            existingCredsSet.add(`${existUrl}|${existUser}|${existPass}`);
+        }
+
         // Deduplicate Credentials
         const uniqueCredentials = [];
         let skippedExisting = 0;
@@ -349,15 +360,9 @@ export class ImportService {
             const credUser = cred.username ? String(cred.username).trim() : "";
             const credPass = cred.password ? String(cred.password).trim() : "";
 
-            const isDuplicate = existingCreds.some(existing => {
-                const existUrl = this.normalizeUrl(existing.url);
-                const existUser = existing.username ? existing.username.trim() : "";
-                const existPass = existing.password ? existing.password.trim() : "";
-                
-                return existUser === credUser && existPass === credPass && existUrl === credUrl;
-            });
+            const key = `${credUrl}|${credUser}|${credPass}`;
             
-            if (isDuplicate) {
+            if (existingCredsSet.has(key)) {
                 skippedExisting++;
             } else {
                 uniqueCredentials.push(cred);
