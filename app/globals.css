@@ -83,9 +83,20 @@
   --color-input: rgb(var(--input));
   --color-ring: rgb(var(--ring));
   --font-sans: var(--font-inter);
+  --font-display: var(--font-outfit);
   --font-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo,
     monospace;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-outfit), sans-serif;
+  font-weight: 800;
 }
 
 * {
@@ -95,6 +106,7 @@
 body {
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
+  font-family: var(--font-inter), sans-serif;
   font-feature-settings:
     "rlig" 1,
     "calt" 1;
