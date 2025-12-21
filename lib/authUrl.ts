@@ -20,6 +20,13 @@ export function getAuthURL(): string {
 }
 
 /**
+ * Get the origin of the auth server for postMessage validation
+ */
+export function getAuthOrigin(): string {
+  return getAuthURL();
+}
+
+/**
  * Generate the source URL for IDM redirect
  * Points to current hostname + /masterpass so IDM redirects back here after auth
  */
@@ -40,7 +47,7 @@ export function getSourceURL(): string {
 /**
  * Open the IDM authentication popup
  */
-export function openAuthPopup(): void {
+export function openAuthPopup(): Window | null {
   const authURL = getAuthURL();
   const loginPath =
     process.env.NEXT_PUBLIC_AUTH_LOGIN_PATH || "/login";
@@ -77,25 +84,6 @@ export function openAuthPopup(): void {
     throw new Error("Failed to open authentication popup. Please check popup settings.");
   }
 
-  // Poll to detect if popup was closed without completing auth
-  let pollCount = 0;
-  const maxPolls = 600; // 10 minutes (600 * 1s)
-
-  const pollPopup = setInterval(() => {
-    pollCount++;
-
-    // Check if popup is closed
-    if (popup.closed) {
-      clearInterval(pollPopup);
-      return;
-    }
-
-    // Timeout after 10 minutes
-    if (pollCount >= maxPolls) {
-      clearInterval(pollPopup);
-      popup.close();
-      return;
-    }
-  }, 1000);
+  return popup;
 }
 

@@ -1,6 +1,15 @@
 "use client";
 
-import { Sun, Moon, Monitor, User, LogOut, Key, Shield, Sparkles } from "lucide-react";
+import {
+  SunIcon,
+  MoonIcon,
+  ComputerDesktopIcon,
+  UserIcon,
+  ArrowRightOnRectangleIcon,
+  KeyIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 import { useTheme } from "@/app/providers";
 import Link from "next/link";
 import { useAppwrite } from "@/app/appwrite-provider";
@@ -8,13 +17,12 @@ import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import PasswordGenerator from "@/components/ui/PasswordGenerator";
-import { openAuthPopup } from "@/lib/authUrl";
 import { useAI } from "@/app/context/AIContext";
 import { usePathname } from "next/navigation";
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
-  const { user, logout } = useAppwrite();
+  const { user, logout, openIDMWindow } = useAppwrite();
   const { openAIModal } = useAI();
   const [showMenu, setShowMenu] = useState(false);
   const pathname = usePathname();
@@ -53,7 +61,7 @@ export function Navbar() {
               className="text-primary hover:text-primary hover:bg-primary/10"
               title="AI Assistant"
             >
-              <Sparkles className="h-5 w-5" />
+              <SparklesIcon className="h-5 w-5" />
             </Button>
           )}
 
@@ -69,9 +77,9 @@ export function Navbar() {
               setTheme(nextTheme);
             }}
           >
-            {theme === "light" && <Sun className="h-5 w-5" />}
-            {theme === "dark" && <Moon className="h-5 w-5" />}
-            {theme === "system" && <Monitor className="h-5 w-5" />}
+            {theme === "light" && <SunIcon className="h-5 w-5" />}
+            {theme === "dark" && <MoonIcon className="h-5 w-5" />}
+            {theme === "system" && <ComputerDesktopIcon className="h-5 w-5" />}
           </button>
           <DropdownMenu
             trigger={
@@ -79,7 +87,7 @@ export function Navbar() {
                 className="p-2 rounded-full hover:bg-accent"
                 title="Password Generator"
               >
-                <Key className="h-5 w-5" />
+                <KeyIcon className="h-5 w-5" />
               </button>
             }
             width="400px"
@@ -95,7 +103,7 @@ export function Navbar() {
               variant="outline"
               onClick={() => {
                 try {
-                  openAuthPopup();
+                  openIDMWindow();
                 } catch (err) {
                   alert(err instanceof Error ? err.message : "Failed to open authentication");
                 }
@@ -111,7 +119,7 @@ export function Navbar() {
                 className="flex items-center gap-2"
                 onClick={() => setShowMenu((v) => !v)}
               >
-                <User className="h-4 w-4" />
+                <UserIcon className="h-4 w-4" />
                 <span className="hidden sm:inline">
                   {user.name || user.email}
                 </span>
@@ -164,7 +172,7 @@ export function Navbar() {
                       setShowMenu(false);
                     }}
                   >
-                    <Shield className="h-4 w-4" />
+                    <ShieldCheckIcon className="h-4 w-4" />
                     Lock now
                   </button>
                   <button
@@ -174,7 +182,7 @@ export function Navbar() {
                       await logout();
                     }}
                   >
-                    <LogOut className="h-4 w-4" />
+                    <ArrowRightOnRectangleIcon className="h-4 w-4" />
                     Logout
                   </button>
                 </div>

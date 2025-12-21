@@ -8,7 +8,7 @@ import { openAuthPopup } from "@/lib/authUrl";
 
 export default function MasterPassPage() {
   const [showModal, setShowModal] = useState(false);
-  const { user, isAuthReady } = useAppwrite();
+  const { user, isAuthReady, openIDMWindow } = useAppwrite();
   const router = useRouter();
 
   // Once auth is ready, determine what to show
@@ -38,7 +38,7 @@ export default function MasterPassPage() {
           <button
             onClick={() => {
               try {
-                openAuthPopup();
+                openIDMWindow();
               } catch (err) {
                 console.error("Failed to open auth popup:", err);
               }

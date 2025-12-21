@@ -50,7 +50,7 @@ function Copy(props: React.SVGProps<SVGSVGElement>) {
 
 export default function LandingPage() {
   const { } = useTheme();
-  const { user } = useAppwrite();
+  const { user, openIDMWindow } = useAppwrite();
   const router = useRouter();
   const demoRef = useRef<HTMLDivElement>(null);
 
@@ -174,7 +174,7 @@ export default function LandingPage() {
                 return;
               }
               try {
-                openAuthPopup();
+                openIDMWindow();
               } catch (err) {
                 alert(err instanceof Error ? err.message : "Failed to open authentication");
               }
@@ -496,7 +496,7 @@ export default function LandingPage() {
                 return;
               }
               try {
-                openAuthPopup();
+                openIDMWindow();
               } catch (err) {
                 alert(err instanceof Error ? err.message : "Failed to open authentication");
               }

@@ -7,13 +7,16 @@ import {
   useState,
   useCallback,
   ReactNode,
+  useRef,
 } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   appwriteAccount,
   resetMasterpassAndWipe,
   hasMasterpass,
   logoutAppwrite,
 } from "@/lib/appwrite";
+import { getAuthOrigin, openAuthPopup } from "@/lib/authUrl";
 import { masterPassCrypto } from "./(protected)/masterpass/logic";
 import { logDebug, logWarn } from "@/lib/logger";
 
@@ -30,6 +33,9 @@ interface AppwriteContextType {
   logout: () => Promise<void>;
   resetMasterpass: () => Promise<void>;
   refresh: () => Promise<void>;
+  openIDMWindow: () => void;
+  closeIDMWindow: () => void;
+  idmWindowOpen: boolean;
 }
 
 const AppwriteContext = createContext<AppwriteContextType | undefined>(
@@ -48,6 +54,10 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [needsMasterPassword, setNeedsMasterPassword] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [idmWindowOpen, setIDMWindowOpen] = useState(false);
+  const idmWindowRef = useRef<Window | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
   const verbose = process.env.NODE_ENV === "development";
 
   // Fetch current user and check master password status
@@ -72,6 +82,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
       } else {
         setNeedsMasterPassword(false);
       }
+      return account;
     } catch (err: unknown) {
       const e = err as AppwriteError;
       if (verbose) logWarn("[auth] account.get error", { error: e });
@@ -89,6 +100,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
       } else {
         logWarn("[auth] Network error, retaining last session state");
       }
+      return null;
     } finally {
       if (!isRetry) setLoading(false);
       setIsAuthReady(true);
@@ -141,6 +153,73 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
       document.body.appendChild(iframe);
     });
   }, [fetchUser]);
+
+  const openIDMWindow = useCallback(() => {
+    if (idmWindowRef.current && !idmWindowRef.current.closed) {
+      idmWindowRef.current.focus();
+      return;
+    }
+
+    try {
+      const popup = openAuthPopup();
+      if (popup) {
+        idmWindowRef.current = popup;
+        setIDMWindowOpen(true);
+      }
+    } catch (error) {
+      console.error("Failed to open IDM window:", error);
+    }
+  }, []);
+
+  const closeIDMWindow = useCallback(() => {
+    if (idmWindowRef.current && !idmWindowRef.current.closed) {
+      idmWindowRef.current.close();
+    }
+    idmWindowRef.current = null;
+    setIDMWindowOpen(false);
+  }, []);
+
+  // Listen for auth success messages from IDM
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      const expectedOrigin = getAuthOrigin();
+      if (event.origin !== expectedOrigin) return;
+
+      if (event.data?.type === "idm:auth-success") {
+        logDebug("[auth] Received auth success message from IDM");
+        
+        // Close the window first for better UX
+        closeIDMWindow();
+        
+        // Refresh user state
+        const account = await fetchUser(true);
+        
+        // Redirect to masterpass if authenticated
+        if (account) {
+          router.replace("/masterpass");
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [fetchUser, closeIDMWindow, router]);
+
+  // Poll for window closure as a fallback
+  useEffect(() => {
+    if (!idmWindowOpen) return;
+
+    const interval = setInterval(() => {
+      if (idmWindowRef.current && idmWindowRef.current.closed) {
+        clearInterval(interval);
+        idmWindowRef.current = null;
+        setIDMWindowOpen(false);
+        fetchUser(true);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [idmWindowOpen, fetchUser]);
 
   // Initial load and authentication check orchestration
   useEffect(() => {
@@ -212,6 +291,9 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
         logout,
         resetMasterpass,
         refresh,
+        openIDMWindow,
+        closeIDMWindow,
+        idmWindowOpen,
       }}
     >
       {children}
