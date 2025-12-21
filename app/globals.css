@@ -1,36 +1,47 @@
 @import "tailwindcss";
 
 :root {
+  /* Solar (Light) Theme - Derived from the Nigerian Landscape */
+  --void: 250 248 246;
+  /* #FAF8F6 */
+  --matter: 234 221 211;
+  /* #EADDD3 */
+  --matter-highlight: 216 200 189;
+  /* #D8C8BD */
+  --tungsten: 255 193 7;
+  /* #FFC107 */
+  --shadow-indigo: 26 35 126;
+
+  --background: var(--void);
+  --foreground: 27 28 32;
+  /* #1B1C20 - Deep Ash text */
+  --card: var(--matter);
+  --card-foreground: 27 28 32;
+  --primary: var(--tungsten);
+  --primary-foreground: 27 28 32;
+  --border: 26 35 126 / 0.1;
+  --ring: var(--tungsten);
+  --radius: 0.25rem;
+
+  --shadow-tangible: 4px 8px 16px rgba(var(--shadow-indigo), 0.15);
+}
+
+.dark {
+  /* The Void (Dark) Theme */
   --void: 27 28 32;
   /* #1B1C20 */
   --matter: 45 36 33;
   /* #2D2421 */
   --matter-highlight: 72 74 59;
   /* #484A3B */
-  --tungsten: 255 193 7;
-  /* #FFC107 */
-  --shadow-indigo: 26 35 126;
-
   --background: var(--void);
   --foreground: 250 248 246;
   /* #FAF8F6 */
   --card: var(--matter);
   --card-foreground: 250 248 246;
-  --primary: var(--tungsten);
-  --primary-foreground: 27 28 32;
   --border: 61 61 61;
   /* #3D3D3D */
-  --ring: var(--tungsten);
-  --radius: 0.25rem;
-  /* Industrial sharp */
-
   --shadow-tangible: 8px 12px 20px rgba(var(--shadow-indigo), 0.4);
-}
-
-.dark {
-  /* Keep same as root to enforce The Void */
-  --background: var(--void);
-  --foreground: 250 248 246;
 }
 
 @theme inline {
