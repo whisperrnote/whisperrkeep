@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { useTheme } from "@/app/providers";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { openAuthPopup } from "@/lib/authUrl";
 import { useAppwrite } from "@/app/appwrite-provider";
@@ -53,6 +53,12 @@ export default function LandingPage() {
   const { user, openIDMWindow } = useAppwrite();
   const router = useRouter();
   const demoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/masterpass");
+    }
+  }, [user, router]);
 
   const handleViewDemo = () => {
     if (demoRef.current) {

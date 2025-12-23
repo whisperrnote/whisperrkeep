@@ -33,7 +33,7 @@ interface AppwriteContextType {
   logout: () => Promise<void>;
   resetMasterpass: () => Promise<void>;
   refresh: () => Promise<void>;
-  openIDMWindow: () => void;
+  openIDMWindow: () => Promise<void>;
   closeIDMWindow: () => void;
   idmWindowOpen: boolean;
 }
@@ -154,7 +154,24 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
     });
   }, [fetchUser]);
 
-  const openIDMWindow = useCallback(() => {
+  const openIDMWindow = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    // First, check if we already have a session locally
+    try {
+      const account = await appwriteAccount.get();
+      if (account) {
+        console.log("[auth] Active session detected, skipping IDM window");
+        setUser(account);
+        if (pathname === "/" || pathname === "/landing") {
+          router.replace("/masterpass");
+        }
+        return;
+      }
+    } catch (e) {
+      // No session, proceed to open window
+    }
+
     if (idmWindowRef.current && !idmWindowRef.current.closed) {
       idmWindowRef.current.focus();
       return;
@@ -169,7 +186,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to open IDM window:", error);
     }
-  }, []);
+  }, [pathname, router]);
 
   const closeIDMWindow = useCallback(() => {
     if (idmWindowRef.current && !idmWindowRef.current.closed) {
