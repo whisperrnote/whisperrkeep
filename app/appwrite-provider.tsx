@@ -157,7 +157,9 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
   }, [fetchUser]);
 
   const openIDMWindow = useCallback(async () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || isAuthenticating) return;
+
+    setIsAuthenticating(true);
 
     // First, check if we already have a session locally
     try {
@@ -165,13 +167,30 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
       if (account) {
         console.log("[auth] Active session detected, skipping IDM window");
         setUser(account);
+        setIsAuthenticating(false);
         if (pathname === "/" || pathname === "/landing") {
           router.replace("/masterpass");
         }
         return;
       }
     } catch (e) {
-      // No session, proceed to open window
+      // No session, proceed to silent check
+    }
+
+    // Try silent auth before opening popup
+    await attemptSilentAuth();
+    try {
+      const account = await appwriteAccount.get();
+      if (account) {
+        setUser(account);
+        setIsAuthenticating(false);
+        if (pathname === "/" || pathname === "/landing") {
+          router.replace("/masterpass");
+        }
+        return;
+      }
+    } catch (e) {
+      // Still no session
     }
 
     if (idmWindowRef.current && !idmWindowRef.current.closed) {
@@ -184,11 +203,14 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
       if (popup) {
         idmWindowRef.current = popup;
         setIDMWindowOpen(true);
+      } else {
+        setIsAuthenticating(false);
       }
     } catch (error) {
       console.error("Failed to open IDM window:", error);
+      setIsAuthenticating(false);
     }
-  }, [pathname, router]);
+  }, [pathname, router, isAuthenticating, attemptSilentAuth]);
 
   const closeIDMWindow = useCallback(() => {
     if (idmWindowRef.current && !idmWindowRef.current.closed) {
@@ -196,6 +218,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
     }
     idmWindowRef.current = null;
     setIDMWindowOpen(false);
+    setIsAuthenticating(false);
   }, []);
 
   // Listen for auth success messages from IDM
@@ -209,6 +232,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
         
         // Close the window first for better UX
         closeIDMWindow();
+        setIsAuthenticating(false);
         
         // Refresh user state
         const account = await fetchUser(true);
@@ -233,6 +257,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
         clearInterval(interval);
         idmWindowRef.current = null;
         setIDMWindowOpen(false);
+        setIsAuthenticating(false);
         fetchUser(true);
       }
     }, 1000);
@@ -303,6 +328,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
+        isAuthenticating,
         isAuthenticated: !!user,
         isAuthReady,
         isVaultUnlocked,
@@ -317,6 +343,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </AppwriteContext.Provider>
+  );
   );
 }
 

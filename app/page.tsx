@@ -50,7 +50,7 @@ function Copy(props: React.SVGProps<SVGSVGElement>) {
 
 export default function LandingPage() {
   const { } = useTheme();
-  const { user, openIDMWindow } = useAppwrite();
+  const { user, openIDMWindow, isAuthenticating } = useAppwrite();
   const router = useRouter();
   const demoRef = useRef<HTMLDivElement>(null);
 
@@ -174,6 +174,7 @@ export default function LandingPage() {
           <Button
             size="lg"
             className="gap-2"
+            isLoading={isAuthenticating}
             onClick={() => {
               if (user) {
                 router.push("/dashboard");
@@ -496,6 +497,7 @@ export default function LandingPage() {
           <Button
             size="lg"
             className="gap-2"
+            isLoading={isAuthenticating}
             onClick={() => {
               if (user) {
                 router.push("/dashboard");
