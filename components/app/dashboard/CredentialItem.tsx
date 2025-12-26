@@ -1,273 +1,20 @@
-import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { Button } from "@/components/ui/Button";
-import { Copy, Edit, Trash2 } from "lucide-react";
-import clsx from "clsx";
-
-const MENU_EVENT = "credential-menu-open";
-
+import { useState } from "react";
+import { 
+  Box, 
+  Typography, 
+  IconButton, 
+  Paper, 
+  Tooltip, 
+  Menu, 
+  MenuItem, 
+  ListItemIcon, 
+  ListItemText,
+  alpha,
+  useTheme,
+  useMediaQuery
+} from "@mui/material";
+import { Copy, Edit, Trash2, MoreVertical, User, Lock } from "lucide-react";
 import type { Credentials } from "@/types/appwrite.d";
-function MobileCopyMenu({
-  credential,
-  onCopy,
-}: {
-  credential: Credentials;
-  onCopy: (v: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const [menuStyle, setMenuStyle] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const idRef = useRef<string>(
-    `menu-${Math.random().toString(36).slice(2, 9)}`,
-  );
-
-  useEffect(() => {
-    function onMenuEvent(e: Event) {
-      const detail = (e as CustomEvent).detail as { id: string } | undefined;
-      if (!detail) return;
-      if (detail.id !== idRef.current) setOpen(false);
-    }
-    window.addEventListener(MENU_EVENT, onMenuEvent as EventListener);
-    return () =>
-      window.removeEventListener(MENU_EVENT, onMenuEvent as EventListener);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const updatePosition = () => {
-      if (!btnRef.current) return;
-      const rect = btnRef.current.getBoundingClientRect();
-      setMenuStyle({ top: rect.bottom + 4, left: rect.left });
-    };
-
-    function handleDocClick(e: MouseEvent) {
-      const target = e.target as Node;
-      if (menuRef.current?.contains(target) || btnRef.current?.contains(target))
-        return;
-      setOpen(false);
-    }
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    function handleScroll() {
-      updatePosition();
-    }
-
-    updatePosition();
-
-    document.addEventListener("mousedown", handleDocClick);
-    document.addEventListener("keydown", handleEsc);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll, { passive: true });
-
-    window.dispatchEvent(
-      new CustomEvent(MENU_EVENT, { detail: { id: idRef.current } }),
-    );
-
-    return () => {
-      document.removeEventListener("mousedown", handleDocClick);
-      document.removeEventListener("keydown", handleEsc);
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-    };
-  }, [open]);
-
-  const toggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setOpen((o) => !o);
-    if (!open)
-      window.dispatchEvent(
-        new CustomEvent(MENU_EVENT, { detail: { id: idRef.current } }),
-      );
-  };
-
-  return (
-    <div className="relative">
-      <Button
-        ref={btnRef}
-        variant="ghost"
-        size="sm"
-        className="rounded-full h-10 w-10"
-        onClick={toggle}
-        title="Copy"
-      >
-        <Copy className="h-6 w-6 text-primary" />
-      </Button>
-      {open &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            ref={menuRef}
-            className="fixed z-[99999] bg-card border-2 border-border rounded-xl shadow-resting py-2 w-44 font-mono shadow-ceramic"
-            style={{ top: menuStyle?.top ?? 0, left: menuStyle?.left ?? 0 }}
-          >
-            <button
-              className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors uppercase font-bold"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCopy(credential.username);
-                setOpen(false);
-              }}
-            >
-              Copy username
-            </button>
-            <button
-              className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCopy(credential.password);
-                setOpen(false);
-              }}
-            >
-              Copy password
-            </button>
-          </div>,
-          document.body,
-        )}
-    </div>
-  );
-}
-
-function MobileMoreMenu({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const [menuStyle, setMenuStyle] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const idRef = useRef<string>(
-    `menu-${Math.random().toString(36).slice(2, 9)}`,
-  );
-
-  useEffect(() => {
-    function onMenuEvent(e: Event) {
-      const detail = (e as CustomEvent).detail as { id: string } | undefined;
-      if (!detail) return;
-      if (detail.id !== idRef.current) setOpen(false);
-    }
-    window.addEventListener(MENU_EVENT, onMenuEvent as EventListener);
-    return () =>
-      window.removeEventListener(MENU_EVENT, onMenuEvent as EventListener);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const updatePosition = () => {
-      if (!btnRef.current) return;
-      const rect = btnRef.current.getBoundingClientRect();
-      setMenuStyle({ top: rect.bottom + 4, left: rect.left });
-    };
-
-    function handleDocClick(e: MouseEvent) {
-      const target = e.target as Node;
-      if (menuRef.current?.contains(target) || btnRef.current?.contains(target))
-        return;
-      setOpen(false);
-    }
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    function handleScroll() {
-      updatePosition();
-    }
-
-    updatePosition();
-
-    document.addEventListener("mousedown", handleDocClick);
-    document.addEventListener("keydown", handleEsc);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll, { passive: true });
-
-    window.dispatchEvent(
-      new CustomEvent(MENU_EVENT, { detail: { id: idRef.current } }),
-    );
-
-    return () => {
-      document.removeEventListener("mousedown", handleDocClick);
-      document.removeEventListener("keydown", handleEsc);
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-    };
-  }, [open]);
-
-  const toggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setOpen((o) => !o);
-    if (!open)
-      window.dispatchEvent(
-        new CustomEvent(MENU_EVENT, { detail: { id: idRef.current } }),
-      );
-  };
-
-  return (
-    <div className="relative">
-      <Button
-        ref={btnRef}
-        variant="ghost"
-        size="sm"
-        className="rounded-full h-10 w-10"
-        onClick={toggle}
-        title="More"
-      >
-        <svg
-          className="h-6 w-6 text-primary"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <circle cx="12" cy="5" r="1.5" />
-          <circle cx="12" cy="12" r="1.5" />
-          <circle cx="12" cy="19" r="1.5" />
-        </svg>
-      </Button>
-      {open &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            ref={menuRef}
-            className="fixed z-[99999] bg-card border-2 border-border rounded-xl shadow-resting py-2 w-36 font-mono shadow-ceramic"
-            style={{ top: menuStyle?.top ?? 0, left: menuStyle?.left ?? 0 }}
-          >
-            <button
-              className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors uppercase font-bold"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-                setOpen(false);
-              }}
-            >
-              Edit
-            </button>
-            <button
-              className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-accent"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-                setOpen(false);
-              }}
-            >
-              Delete
-            </button>
-          </div>,
-          document.body,
-        )}
-    </div>
-  );
-}
 
 export default function CredentialItem({
   credential,
@@ -284,19 +31,21 @@ export default function CredentialItem({
   onDelete: () => void;
   onClick?: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [copyAnchorEl, setCopyAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleCopy = (value: string) => {
     onCopy(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
+    setCopyAnchorEl(null);
   };
 
   const getFaviconUrl = (url: string | null) => {
     if (!url) return null;
     try {
       const domain = new URL(url).hostname;
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
     } catch {
       return null;
     }
@@ -305,122 +54,148 @@ export default function CredentialItem({
   const faviconUrl = getFaviconUrl(credential.url);
 
   return (
-    <div
-      className={clsx(
-        "rounded-3xl overflow-visible mb-3 backdrop-blur-md border-2 border-border shadow-resting cursor-pointer",
-        "bg-card/80 transition-all duration-300 hover:shadow-hover hover:-translate-y-1 active:translate-y-0 text-foreground shadow-ceramic",
-      )}
+    <Paper
+      elevation={0}
       onClick={onClick}
-      tabIndex={onClick ? 0 : undefined}
-      role={onClick ? "button" : undefined}
-      onKeyDown={
-        onClick
-          ? (e) => {
-            if (e.key === "Enter" || e.key === " ") onClick();
-          }
-          : undefined
-      }
+      sx={{
+        p: 2,
+        mb: 1.5,
+        borderRadius: '20px',
+        bgcolor: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        display: 'flex',
+        alignItems: 'center',
+        '&:hover': {
+          bgcolor: 'rgba(255, 255, 255, 0.04)',
+          borderColor: 'rgba(255, 255, 255, 0.15)',
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+        }
+      }}
     >
-      <div className="flex items-center px-4 py-4">
-        <div className="flex-shrink-0">
-          <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-border shadow-resting">
-            {faviconUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={faviconUrl} alt="" className="w-6 h-6" />
-            ) : (
-              <span className="text-primary font-bold text-sm">
-                {credential.name?.charAt(0)?.toUpperCase() || "?"}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex-1 ml-4 min-w-0">
-          <div className="font-bold text-foreground font-mono truncate uppercase tracking-tight">
-            {credential.name}
-          </div>
-          <div className="text-[13px] text-muted-foreground truncate">
-            {credential.username}
-          </div>
-          {isDesktop && (
-            <div className="text-[11px] text-muted-foreground font-mono mt-1 opacity-50">
-              ••••••••••••
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Desktop controls: larger icons kept */}
-          <div className="hidden sm:flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full h-9 w-9"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCopy(credential.username);
-              }}
-              title="Copy Username"
-            >
-              <Copy className="h-5 w-5 text-foreground" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full h-9 w-9"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCopy(credential.password);
-              }}
-              title="Copy Password"
-            >
-              <Copy className="h-5 w-5 text-primary" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full h-9 w-9"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              title="Edit"
-            >
-              <Edit className="h-5 w-5 text-foreground" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full h-9 w-9"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              title="Delete"
-            >
-              <Trash2 className="h-5 w-5 text-destructive" />
-            </Button>
-          </div>
-
-          {/* Mobile grouped controls */}
-          <div className="flex sm:hidden items-center gap-2">
-            {/* Copy dropdown */}
-            <MobileCopyMenu credential={credential} onCopy={handleCopy} />
-
-            {/* More dropdown for edit/delete */}
-            <MobileMoreMenu onEdit={onEdit} onDelete={onDelete} />
-          </div>
-        </div>
-
-        {copied && (
-          <span className="ml-2 text-xs text-green-600 animate-fade-in-out">
-            Copied!
-          </span>
+      {/* Icon */}
+      <Box sx={{ 
+        width: 48, 
+        height: 48, 
+        borderRadius: '14px', 
+        bgcolor: 'rgba(255, 255, 255, 0.03)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        flexShrink: 0,
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        overflow: 'hidden'
+      }}>
+        {faviconUrl ? (
+          <Box component="img" src={faviconUrl} sx={{ width: 28, height: 28 }} />
+        ) : (
+          <Typography sx={{ fontWeight: 800, color: 'primary.main', fontSize: '1.2rem' }}>
+            {credential.name?.charAt(0)?.toUpperCase() || "?"}
+          </Typography>
         )}
-      </div>
-    </div>
+      </Box>
+
+      {/* Info */}
+      <Box sx={{ ml: 2.5, flexGrow: 1, minWidth: 0 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', noWrap: true, lineHeight: 1.2 }}>
+          {credential.name}
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', noWrap: true, mt: 0.5 }}>
+          {credential.username}
+        </Typography>
+      </Box>
+
+      {/* Actions */}
+      <Box sx={{ display: 'flex', gap: 0.5, ml: 2 }}>
+        {!isMobile ? (
+          <>
+            <Tooltip title="Copy Username">
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleCopy(credential.username); }} sx={{ color: 'text.secondary' }}>
+                <User size={18} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Copy Password">
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleCopy(credential.password); }} sx={{ color: 'primary.main' }}>
+                <Lock size={18} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Edit">
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); onEdit(); }} sx={{ color: 'text.secondary' }}>
+                <Edit size={18} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete">
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); onDelete(); }} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}>
+                <Trash2 size={18} />
+              </IconButton>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); setCopyAnchorEl(e.currentTarget); }} sx={{ color: 'primary.main' }}>
+              <Copy size={20} />
+            </IconButton>
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); setAnchorEl(e.currentTarget); }} sx={{ color: 'text.secondary' }}>
+              <MoreVertical size={20} />
+            </IconButton>
+          </>
+        )}
+      </Box>
+
+      {/* Mobile Copy Menu */}
+      <Menu
+        anchorEl={copyAnchorEl}
+        open={Boolean(copyAnchorEl)}
+        onClose={() => setCopyAnchorEl(null)}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            bgcolor: 'rgba(10, 10, 10, 0.9)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            backgroundImage: 'none',
+            minWidth: '180px'
+          }
+        }}
+      >
+        <MenuItem onClick={() => handleCopy(credential.username)}>
+          <ListItemIcon><User size={18} /></ListItemIcon>
+          <ListItemText primary="Copy Username" primaryTypographyProps={{ fontWeight: 600 }} />
+        </MenuItem>
+        <MenuItem onClick={() => handleCopy(credential.password)}>
+          <ListItemIcon><Lock size={18} /></ListItemIcon>
+          <ListItemText primary="Copy Password" primaryTypographyProps={{ fontWeight: 600 }} />
+        </MenuItem>
+      </Menu>
+
+      {/* Mobile More Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            bgcolor: 'rgba(10, 10, 10, 0.9)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            backgroundImage: 'none',
+            minWidth: '150px'
+          }
+        }}
+      >
+        <MenuItem onClick={() => { onEdit(); setAnchorEl(null); }}>
+          <ListItemIcon><Edit size={18} /></ListItemIcon>
+          <ListItemText primary="Edit" primaryTypographyProps={{ fontWeight: 600 }} />
+        </MenuItem>
+        <MenuItem onClick={() => { onDelete(); setAnchorEl(null); }} sx={{ color: 'error.main' }}>
+          <ListItemIcon><Trash2 size={18} color={theme.palette.error.main} /></ListItemIcon>
+          <ListItemText primary="Delete" primaryTypographyProps={{ fontWeight: 700 }} />
+        </MenuItem>
+      </Menu>
+    </Paper>
   );
 }

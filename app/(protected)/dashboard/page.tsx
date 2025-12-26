@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Credentials, Folders as FolderDoc } from "@/types/appwrite.d";
-import { Folder, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { useAppwrite } from "@/app/appwrite-provider";
 import {
   deleteCredential,
@@ -17,20 +15,53 @@ import toast from "react-hot-toast";
 import CredentialItem from "@/components/app/dashboard/CredentialItem";
 import CredentialSkeleton from "@/components/app/dashboard/CredentialSkeleton";
 import PaginationControls from "@/components/app/dashboard/PaginationControls";
-import { DropdownMenu, DropdownMenuItem } from "@/components/ui/DropdownMenu";
 import SearchBar from "@/components/app/dashboard/SearchBar";
 import CredentialDialog from "@/components/app/dashboard/CredentialDialog";
 import VaultGuard from "@/components/layout/VaultGuard";
-import { Dialog } from "@/components/ui/Dialog";
 import CredentialDetail from "@/components/app/dashboard/CredentialDetail";
 import { useAI } from "@/app/context/AIContext";
 import { useSudo } from "@/app/context/SudoContext";
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  Container, 
+  Grid, 
+  Paper, 
+  IconButton, 
+  TextField, 
+  CircularProgress, 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  alpha, 
+  Chip,
+  Menu,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
+  Skeleton,
+  Fade
+} from "@mui/material";
+import { Folder, ChevronDown, Plus, Search, Sparkles } from "lucide-react";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[22px] font-bold text-primary mb-2 drop-shadow-sm font-mono uppercase tracking-tight">
+    <Typography 
+      variant="overline" 
+      sx={{ 
+        display: 'block',
+        fontWeight: 800, 
+        color: 'primary.main', 
+        mb: 2, 
+        letterSpacing: '0.15em',
+        fontFamily: 'var(--font-mono)',
+        fontSize: '0.75rem'
+      }}
+    >
       {children}
-    </h2>
+    </Typography>
   );
 }
 
@@ -333,150 +364,202 @@ export default function DashboardPage() {
     );
   }
 
+  const theme = useTheme();
+  const isMobileView = useMediaQuery(theme.breakpoints.down('md'));
+  const [folderAnchorEl, setFolderAnchorEl] = useState<null | HTMLElement>(null);
+
+  if (!isAuthReady || !user) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: 'background.default' }}>
+        <CircularProgress color="primary" />
+      </Box>
+    );
+  }
+
   const isSearching = !!searchTerm.trim();
   const effectiveTotal = filteredCredentials.length;
   const totalPages = Math.ceil(effectiveTotal / pageSize) || 1;
 
   return (
     <VaultGuard>
-      <div className="w-full min-h-screen bg-background flex flex-col pb-20 lg:pb-6">
-        {/* Desktop AppBar */}
-        <div className="hidden md:block">
-          <div className="h-20 px-8 flex items-center bg-card rounded-b-3xl shadow-md">
-            <span className="font-bold text-[32px] tracking-wider text-primary drop-shadow-md mr-8 font-mono">
-              Whisperrkeep
-            </span>
-            <div className="flex-1 bg-card rounded-full">
-              <SearchBar onSearch={handleSearch} onSmartOrganize={handleSmartOrganize} />
-            </div>
-          </div>
-        </div>
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: 10 }}>
+        {/* Header Section */}
+        <Box sx={{ 
+          px: { xs: 2, md: 4 }, 
+          py: 3, 
+          display: 'flex', 
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'stretch', md: 'center' },
+          gap: 3,
+          mb: 2
+        }}>
+          <Box sx={{ flexShrink: 0 }}>
+            <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.03em' }}>
+              Vault
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+              {effectiveTotal} items secured
+            </Typography>
+          </Box>
 
-        {/* Mobile AppBar */}
-        <div className="md:hidden">
-          <div className="h-[70px] flex items-center justify-between bg-card shadow-md relative px-4">
-            <span className="font-bold text-[26px] tracking-wider text-primary drop-shadow-md font-mono">
-              Whisperrkeep
-            </span>
-            <div className="absolute left-0 right-0 bottom-0 px-2 pb-2 bg-card rounded-full">
-              <SearchBar onSearch={handleSearch} />
-            </div>
-          </div>
-        </div>
+          <Box sx={{ flexGrow: 1 }}>
+            <SearchBar onSearch={handleSearch} onSmartOrganize={handleSmartOrganize} />
+          </Box>
 
-        {/* Main Content */}
-        <div className="flex-1 w-full max-w-4xl mx-auto px-4 md:px-8 py-6 bg-card rounded-lg shadow">
-          {/* Filter chips */}
-          <div className="flex flex-wrap items-center py-4">
-            <DropdownMenu
-              trigger={
-                <div className="flex items-center px-4 py-2 bg-secondary text-secondary-foreground rounded-full shadow-resting mr-3 mb-2 cursor-pointer transition-all hover:shadow-hover hover:-translate-y-0.5 active:translate-y-0 shadow-ceramic">
-                  <Folder className="h-5 w-5" />
-                  <span className="ml-2 font-semibold text-[15px]">
-                    {selectedFolder
-                      ? folders.find((f) => f.$id === selectedFolder)?.name
-                      : "All Folders"}
-                  </span>
-                  <ChevronDown className="h-4 w-4 ml-1" />
-                </div>
-              }
+          <Button 
+            variant="contained" 
+            startIcon={<Plus size={18} />}
+            onClick={handleAdd}
+            sx={{ 
+              borderRadius: '12px', 
+              px: 3, 
+              py: 1.2, 
+              fontWeight: 700,
+              boxShadow: '0 0 20px rgba(0, 240, 255, 0.3)',
+              '&:hover': { boxShadow: '0 0 30px rgba(0, 240, 255, 0.5)' }
+            }}
+          >
+            Add Password
+          </Button>
+        </Box>
+
+        {/* Main Content Area */}
+        <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 } }}>
+          {/* Filters & Actions */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 2, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              startIcon={<Folder size={18} />}
+              endIcon={<ChevronDown size={16} />}
+              onClick={(e) => setFolderAnchorEl(e.currentTarget)}
+              sx={{ 
+                borderRadius: '12px', 
+                bgcolor: 'rgba(255, 255, 255, 0.02)',
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+                color: 'text.primary',
+                fontWeight: 700,
+                px: 2,
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.2)' }
+              }}
             >
-              <DropdownMenuItem
-                onClick={() => {
-                  setSelectedFolder(null);
-                  setCurrentPage(1);
-                }}
-              >
+              {selectedFolder ? folders.find((f) => f.$id === selectedFolder)?.name : "All Folders"}
+            </Button>
+            
+            <Menu
+              anchorEl={folderAnchorEl}
+              open={Boolean(folderAnchorEl)}
+              onClose={() => setFolderAnchorEl(null)}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  borderRadius: '16px',
+                  bgcolor: 'rgba(10, 10, 10, 0.9)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  backgroundImage: 'none',
+                  minWidth: '200px'
+                }
+              }}
+            >
+              <MenuItem onClick={() => { setSelectedFolder(null); setCurrentPage(1); setFolderAnchorEl(null); }} sx={{ fontWeight: 600 }}>
                 All Folders
-              </DropdownMenuItem>
+              </MenuItem>
               {folders.map((folder) => (
-                <DropdownMenuItem
-                  key={folder.$id}
-                  onClick={() => {
-                    setSelectedFolder(folder.$id);
-                    setCurrentPage(1);
-                  }}
+                <MenuItem 
+                  key={folder.$id} 
+                  onClick={() => { setSelectedFolder(folder.$id); setCurrentPage(1); setFolderAnchorEl(null); }}
+                  sx={{ fontWeight: 500 }}
                 >
                   {folder.name}
-                </DropdownMenuItem>
+                </MenuItem>
               ))}
-            </DropdownMenu>
-          </div>
+            </Menu>
 
-          <div className="flex justify-end mb-4">
-            <Button onClick={handleAdd}>+ Add Password</Button>
-          </div>
+            {isSearching && (
+              <Chip 
+                label={`${effectiveTotal} results for "${searchTerm}"`}
+                onDelete={() => handleSearch("")}
+                sx={{ 
+                  borderRadius: '8px', 
+                  bgcolor: 'rgba(0, 240, 255, 0.1)', 
+                  color: 'primary.main',
+                  fontWeight: 700,
+                  border: '1px solid rgba(0, 240, 255, 0.2)'
+                }}
+              />
+            )}
+          </Box>
 
           {/* Recent Section */}
           {!isSearching && !selectedFolder && recentCredentials.length > 0 && (
-            <>
-              <SectionTitle>Recent</SectionTitle>
-              <div className="space-y-2 mb-6 text-foreground dark:text-foreground">
+            <Box sx={{ mb: 6 }}>
+              <SectionTitle>Recent Items</SectionTitle>
+              <Grid container spacing={2}>
                 {recentCredentials.map((cred) => (
-                  <CredentialItem
-                    key={cred.$id}
-                    credential={cred}
-                    onCopy={handleCopy}
-                    isDesktop={isDesktop}
-                    onEdit={() => handleEdit(cred)}
-                    onDelete={() => openDeleteModal(cred)}
-                    onClick={() => {
-                      setSelectedCredential(cred);
-                      setShowDetail(true);
-                    }}
-                  />
+                  <Grid item xs={12} key={`recent-${cred.$id}`}>
+                    <CredentialItem
+                      credential={cred}
+                      onCopy={handleCopy}
+                      isDesktop={!isMobileView}
+                      onEdit={() => handleEdit(cred)}
+                      onDelete={() => openDeleteModal(cred)}
+                      onClick={() => {
+                        setSelectedCredential(cred);
+                        setShowDetail(true);
+                      }}
+                    />
+                  </Grid>
                 ))}
-              </div>
-            </>
+              </Grid>
+            </Box>
           )}
 
           {/* All Items Section */}
-          <div className="flex items-center justify-between mb-4">
+          <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <SectionTitle>
-              {isSearching ? `Search Results for "${searchTerm}"` : "All Items"}
+              {isSearching ? "Search Results" : "All Items"}
             </SectionTitle>
-            {isSearching && (
-              <div
-                aria-live="polite"
-                aria-atomic="true"
-                className="text-sm text-muted-foreground"
-              >
-                {effectiveTotal} result{effectiveTotal !== 1 ? "s" : ""}
-              </div>
+            
+            {!loading && effectiveTotal > 0 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={effectiveTotal}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
             )}
-          </div>
-
-          {/* Top Pagination Controls */}
-          {!loading && effectiveTotal > 0 && (
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={effectiveTotal}
-              pageSize={pageSize}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          )}
+          </Box>
 
           {/* Credentials List */}
-          <div className="space-y-2 text-foreground dark:text-foreground">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {loading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <CredentialSkeleton key={`skeleton-${i}`} />
               ))
             ) : paginatedCredentials.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                {isSearching
-                  ? `No credentials found matching "${searchTerm}"`
-                  : "No credentials found. Add your first password to get started!"}
-              </div>
+              <Paper sx={{ 
+                p: 8, 
+                textAlign: 'center', 
+                borderRadius: '32px', 
+                bgcolor: 'rgba(255, 255, 255, 0.01)', 
+                border: '1px dashed', 
+                borderColor: 'rgba(255, 255, 255, 0.1)' 
+              }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                  {isSearching
+                    ? `No credentials found matching "${searchTerm}"`
+                    : "Your vault is empty. Add your first password to get started!"}
+                </Typography>
+              </Paper>
             ) : (
               paginatedCredentials.map((cred: Credentials) => (
                 <CredentialItem
                   key={cred.$id}
                   credential={cred}
                   onCopy={handleCopy}
-                  isDesktop={isDesktop}
+                  isDesktop={!isMobileView}
                   onEdit={() => handleEdit(cred)}
                   onDelete={() => openDeleteModal(cred)}
                   onClick={() => {
@@ -486,11 +569,11 @@ export default function DashboardPage() {
                 />
               ))
             )}
-          </div>
+          </Box>
 
-          {/* Bottom Pagination Controls */}
+          {/* Bottom Pagination */}
           {!loading && effectiveTotal > pageSize && (
-            <div className="mt-6">
+            <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
               <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -499,9 +582,9 @@ export default function DashboardPage() {
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
               />
-            </div>
+            </Box>
           )}
-        </div>
+        </Container>
 
         <CredentialDialog
           open={showDialog}
@@ -514,57 +597,63 @@ export default function DashboardPage() {
           onSaved={refreshCredentials}
         />
 
-
-
         {/* Delete Confirmation Dialog */}
-        {isDeleteModalOpen && (
-          <Dialog
-            open={isDeleteModalOpen}
-            onClose={() => setIsDeleteModalOpen(false)}
-          >
-            <div className="p-6">
-              <h3 className="text-lg font-bold">Delete Credential</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Are you sure you want to delete the credential for &quot;
-                {credentialToDelete?.name}&quot;? This action cannot be undone.
-              </p>
-              <div className="mt-4 flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDeleteModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button variant="destructive" onClick={() => {
-                  requestSudo({
-                    onSuccess: () => handleDelete()
-                  });
-                }}>
-                  Delete
-                </Button>
-              </div>
-            </div>
-          </Dialog>
-        )}
+        <Dialog
+          open={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          PaperProps={{
+            sx: {
+              borderRadius: '24px',
+              bgcolor: 'rgba(10, 10, 10, 0.9)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundImage: 'none',
+              p: 1
+            }
+          }}
+        >
+          <DialogTitle sx={{ fontWeight: 800, fontFamily: 'var(--font-space-grotesk)' }}>
+            Delete Credential
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Are you sure you want to delete the credential for <strong>{credentialToDelete?.name}</strong>? This action cannot be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, gap: 1 }}>
+            <Button 
+              fullWidth 
+              variant="outlined" 
+              onClick={() => setIsDeleteModalOpen(false)}
+              sx={{ borderRadius: '12px' }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              fullWidth 
+              variant="contained" 
+              color="error"
+              onClick={() => {
+                requestSudo({
+                  onSuccess: () => handleDelete()
+                });
+              }}
+              sx={{ borderRadius: '12px' }}
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Credential Detail Sidebar/Overlay */}
         {showDetail && selectedCredential && (
-          <>
-            {isMobile && (
-              <div
-                className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm transition-opacity duration-300"
-                onClick={() => setShowDetail(false)}
-                style={{ backdropFilter: "blur(4px)" }}
-              />
-            )}
-            <CredentialDetail
-              credential={selectedCredential}
-              onClose={() => setShowDetail(false)}
-              isMobile={isMobile}
-            />
-          </>
+          <CredentialDetail
+            credential={selectedCredential}
+            onClose={() => setShowDetail(false)}
+            isMobile={isMobileView}
+          />
         )}
-      </div>
+      </Box>
     </VaultGuard>
   );
 }

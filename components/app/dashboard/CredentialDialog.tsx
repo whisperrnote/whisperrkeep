@@ -1,8 +1,33 @@
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, RefreshCw, Plus, X } from "lucide-react";
-import { Dialog } from "@/components/ui/Dialog";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { 
+  Eye, 
+  EyeOff, 
+  RefreshCw, 
+  Plus, 
+  X,
+  Save,
+  Globe,
+  Tag,
+  FileText,
+  User,
+  Lock
+} from "lucide-react";
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  Button, 
+  TextField, 
+  IconButton, 
+  InputAdornment, 
+  Box, 
+  Typography, 
+  Divider,
+  alpha,
+  useTheme,
+  Grid
+} from "@mui/material";
 import { createCredential, updateCredential } from "@/lib/appwrite";
 import type { Credentials } from "@/types/appwrite";
 import { useAppwrite } from "@/app/appwrite-provider";
@@ -13,7 +38,7 @@ export default function CredentialDialog({
   onClose,
   initial,
   onSaved,
-  prefill, // New prop for AI pre-filling
+  prefill,
 }: {
   open: boolean;
   onClose: () => void;
@@ -22,6 +47,7 @@ export default function CredentialDialog({
   prefill?: { name?: string; url?: string; username?: string };
 }) {
   const { user } = useAppwrite();
+  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [customFields, setCustomFields] = useState<
     Array<{ id: string; label: string; value: string }>
@@ -54,15 +80,12 @@ export default function CredentialDialog({
       setForm({
         name: prefill?.name || "",
         username: prefill?.username || "",
-        password: "", // Always start empty or let user generate
+        password: "",
         url: prefill?.url || "",
         notes: "",
         tags: "",
       });
       setCustomFields([]);
-      
-      // Auto-generate password if it's a new entry triggered by AI?
-      // For now, let's just make it easier to click.
     }
   }, [initial, open, prefill]);
 
@@ -98,7 +121,6 @@ export default function CredentialDialog({
     try {
       if (!user) throw new Error("Not authenticated");
 
-      // Clean and prepare credential data with proper null handling
       const credentialData: Omit<
         Credentials,
         "$id" | "$createdAt" | "$updatedAt"
@@ -164,153 +186,259 @@ export default function CredentialDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <form onSubmit={handleSubmit} className="p-6 space-y-4 max-w-md w-full">
-        <h2 className="text-xl font-bold mb-2">
-          {initial ? "Edit" : "Add"} Credential
-        </h2>
+    <Dialog 
+      open={open} 
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '28px',
+          bgcolor: 'rgba(10, 10, 10, 0.8)',
+          backdropFilter: 'blur(25px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backgroundImage: 'none',
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.5)'
+        }
+      }}
+    >
+      <form onSubmit={handleSubmit}>
+        <DialogTitle sx={{ 
+          p: 3, 
+          pb: 1, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          fontFamily: 'var(--font-space-grotesk)',
+          fontWeight: 900,
+          fontSize: '1.5rem'
+        }}>
+          {initial ? "Edit Credential" : "Add Credential"}
+          <IconButton onClick={onClose} size="small" sx={{ color: 'text.secondary' }}>
+            <X size={20} />
+          </IconButton>
+        </DialogTitle>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Name *</label>
-          <Input
-            placeholder="e.g., GitHub, Gmail"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Username/Email *</label>
-          <Input
-            placeholder="john@example.com"
-            value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Password *</label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter or generate password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+        <DialogContent sx={{ p: 3, pt: 1 }}>
+          <Grid container spacing={2.5}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Name"
+                placeholder="e.g., GitHub, Gmail"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
+                variant="filled"
+                InputProps={{
+                  disableUnderline: true,
+                  sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 0.03)' }
+                }}
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGeneratePassword}
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+            </Grid>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Website URL</label>
-          <Input
-            type="url"
-            placeholder="https://example.com"
-            value={form.url}
-            onChange={(e) => setForm({ ...form, url: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Tags</label>
-          <Input
-            placeholder="Comma separated: work, email, important"
-            value={form.tags}
-            onChange={(e) => setForm({ ...form, tags: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Notes</label>
-          <textarea
-            className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
-            placeholder="Additional notes"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
-        </div>
-
-        {/* Custom Fields */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Custom Fields</label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addCustomField}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Field
-            </Button>
-          </div>
-          {customFields.map((field) => (
-            <div key={field.id} className="flex gap-2">
-              <Input
-                placeholder="Field name"
-                value={field.label}
-                onChange={(e) =>
-                  updateCustomField(field.id, "label", e.target.value)
-                }
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Username/Email"
+                placeholder="john@example.com"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                required
+                variant="filled"
+                InputProps={{
+                  disableUnderline: true,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <User size={18} />
+                    </InputAdornment>
+                  ),
+                  sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 0.03)' }
+                }}
               />
-              <Input
-                placeholder="Field value"
-                value={field.value}
-                onChange={(e) =>
-                  updateCustomField(field.id, "value", e.target.value)
-                }
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter or generate password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required
+                  variant="filled"
+                  InputProps={{
+                    disableUnderline: true,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock size={18} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword(!showPassword)} size="small">
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 0.03)' }
+                  }}
+                />
+                <IconButton 
+                  onClick={handleGeneratePassword}
+                  sx={{ 
+                    bgcolor: 'rgba(0, 240, 255, 0.1)', 
+                    color: 'primary.main',
+                    borderRadius: '12px',
+                    width: 56,
+                    height: 56,
+                    '&:hover': { bgcolor: 'rgba(0, 240, 255, 0.2)' }
+                  }}
+                >
+                  <RefreshCw size={20} />
+                </IconButton>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Website URL"
+                type="url"
+                placeholder="https://example.com"
+                value={form.url}
+                onChange={(e) => setForm({ ...form, url: e.target.value })}
+                variant="filled"
+                InputProps={{
+                  disableUnderline: true,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Globe size={18} />
+                    </InputAdornment>
+                  ),
+                  sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 0.03)' }
+                }}
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeCustomField(field.id)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
+            </Grid>
 
-        {error && <div className="text-red-600 text-sm">{error}</div>}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Tags"
+                placeholder="Comma separated: work, email, important"
+                value={form.tags}
+                onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                variant="filled"
+                InputProps={{
+                  disableUnderline: true,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Tag size={18} />
+                    </InputAdornment>
+                  ),
+                  sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 0.03)' }
+                }}
+              />
+            </Grid>
 
-        <div className="flex gap-2">
-          <Button type="submit" className="flex-1" disabled={loading}>
-            {loading ? "Saving..." : initial ? "Update" : "Add"}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="flex-1"
-            onClick={onClose}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notes"
+                multiline
+                rows={3}
+                placeholder="Additional notes"
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                variant="filled"
+                InputProps={{
+                  disableUnderline: true,
+                  startAdornment: (
+                    <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.5 }}>
+                      <FileText size={18} />
+                    </InputAdornment>
+                  ),
+                  sx: { borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 0.03)' }
+                }}
+              />
+            </Grid>
+
+            {/* Custom Fields */}
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                  Custom Fields
+                </Typography>
+                <Button
+                  size="small"
+                  startIcon={<Plus size={16} />}
+                  onClick={addCustomField}
+                  sx={{ borderRadius: '8px' }}
+                >
+                  Add Field
+                </Button>
+              </Box>
+              
+              {customFields.map((field) => (
+                <Box key={field.id} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  <TextField
+                    size="small"
+                    placeholder="Label"
+                    value={field.label}
+                    onChange={(e) => updateCustomField(field.id, "label", e.target.value)}
+                    variant="filled"
+                    InputProps={{ disableUnderline: true, sx: { borderRadius: '8px', bgcolor: 'rgba(255, 255, 255, 0.03)' } }}
+                  />
+                  <TextField
+                    size="small"
+                    placeholder="Value"
+                    value={field.value}
+                    onChange={(e) => updateCustomField(field.id, "value", e.target.value)}
+                    variant="filled"
+                    InputProps={{ disableUnderline: true, sx: { borderRadius: '8px', bgcolor: 'rgba(255, 255, 255, 0.03)' } }}
+                  />
+                  <IconButton onClick={() => removeCustomField(field.id)} size="small" color="error">
+                    <X size={18} />
+                  </IconButton>
+                </Box>
+              ))}
+            </Grid>
+          </Grid>
+
+          {error && (
+            <Typography color="error" variant="caption" sx={{ mt: 2, display: 'block' }}>
+              {error}
+            </Typography>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 1, gap: 1.5 }}>
+          <Button 
+            onClick={onClose} 
+            fullWidth 
+            variant="outlined"
+            sx={{ borderRadius: '12px', py: 1.2, fontWeight: 700 }}
           >
             Cancel
           </Button>
-        </div>
+          <Button 
+            type="submit" 
+            fullWidth 
+            variant="contained" 
+            disabled={loading}
+            startIcon={!loading && <Save size={18} />}
+            sx={{ 
+              borderRadius: '12px', 
+              py: 1.2, 
+              fontWeight: 700,
+              boxShadow: '0 8px 20px rgba(0, 240, 255, 0.2)'
+            }}
+          >
+            {loading ? "Saving..." : initial ? "Update" : "Add"}
+          </Button>
+        </DialogActions>
       </form>
     </Dialog>
   );

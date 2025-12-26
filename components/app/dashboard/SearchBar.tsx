@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X, Sparkles } from "lucide-react";
 import { useAI } from "@/app/context/AIContext";
-import { Button } from "@/components/ui/Button";
+import { 
+  Box, 
+  TextField, 
+  InputAdornment, 
+  IconButton, 
+  Button,
+  alpha,
+  useTheme
+} from "@mui/material";
 
 export default function SearchBar({
   onSearch,
@@ -12,6 +20,7 @@ export default function SearchBar({
   delay?: number;
   onSmartOrganize?: () => void;
 }) {
+  const theme = useTheme();
   const [value, setValue] = useState("");
   const timer = useRef<number | null>(null);
   const { isLoading } = useAI();
@@ -34,40 +43,69 @@ export default function SearchBar({
   };
 
   return (
-    <div className="flex gap-2 w-full">
-      <div className="rounded-full overflow-hidden shadow-sm border border-border bg-card flex items-center h-11 px-4 flex-1">
-        <Search className="text-primary w-5 h-5" />
-        <input
-          className="flex-1 ml-2 bg-transparent outline-none text-base placeholder:text-muted-foreground"
-          placeholder="Search passwords, usernames..."
-          type="search"
-          value={value}
-          onChange={(e) => handleChange(e.target.value)}
-          aria-label="Search credentials"
-        />
-        {value && (
-          <button
-            onClick={handleClear}
-            className="ml-2 p-1 rounded-full hover:bg-muted transition-colors"
-            aria-label="Clear search"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
-        )}
-      </div>
+    <Box sx={{ display: 'flex', gap: 1.5, width: '100%' }}>
+      <TextField
+        fullWidth
+        placeholder="Search passwords, usernames..."
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        variant="filled"
+        InputProps={{
+          disableUnderline: true,
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search size={20} color={theme.palette.primary.main} />
+            </InputAdornment>
+          ),
+          endAdornment: value && (
+            <InputAdornment position="end">
+              <IconButton onClick={handleClear} size="small">
+                <X size={16} />
+              </IconButton>
+            </InputAdornment>
+          ),
+          sx: {
+            height: 48,
+            borderRadius: '24px',
+            bgcolor: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            px: 1,
+            '&:hover': {
+              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              borderColor: 'rgba(255, 255, 255, 0.15)'
+            },
+            '&.Mui-focused': {
+              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              borderColor: 'primary.main',
+              boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
+            }
+          }
+        }}
+      />
       
       {onSmartOrganize && (
         <Button
-          variant="outline"
-          className="h-11 rounded-full px-4 gap-2 border-border shadow-sm hidden md:flex"
+          variant="outlined"
           onClick={onSmartOrganize}
           disabled={isLoading}
-          title="AI Smart Organize"
+          startIcon={<Sparkles size={18} />}
+          sx={{
+            height: 48,
+            borderRadius: '24px',
+            px: 3,
+            display: { xs: 'none', md: 'flex' },
+            whiteSpace: 'nowrap',
+            fontWeight: 700,
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            '&:hover': {
+              borderColor: 'primary.main',
+              bgcolor: alpha(theme.palette.primary.main, 0.05)
+            }
+          }}
         >
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">Organize</span>
+          Organize
         </Button>
       )}
-    </div>
+    </Box>
   );
 }
