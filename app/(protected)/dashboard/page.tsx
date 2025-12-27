@@ -68,6 +68,9 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export default function DashboardPage() {
   const { user } = useAppwrite();
   const { analyze, registerCreateModal } = useAI();
+  const theme = useTheme();
+  const isMobileView = useMediaQuery(theme.breakpoints.down('md'));
+  
   // State for all credentials, fetched once
   const [allCredentials, setAllCredentials] = useState<Credentials[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,9 +95,6 @@ export default function DashboardPage() {
   }, [registerCreateModal]);
 
   const [showDetail, setShowDetail] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const isDesktop =
-    typeof window !== "undefined" ? window.innerWidth > 900 : true;
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -103,6 +103,7 @@ export default function DashboardPage() {
   // Folder state
   const [folders, setFolders] = useState<FolderDoc[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [folderAnchorEl, setFolderAnchorEl] = useState<null | HTMLElement>(null);
 
   // Recent credentials state
   const [recentCredentials, setRecentCredentials] = useState<Credentials[]>([]);

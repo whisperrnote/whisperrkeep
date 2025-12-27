@@ -1,47 +1,110 @@
 import { forwardRef } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { Button as MuiButton, ButtonProps as MuiButtonProps, alpha, styled } from "@mui/material";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-xl text-sm font-bold uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background transform-gpu transition-all duration-200 font-mono shadow-ceramic",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground shadow-resting hover:shadow-hover hover:-translate-y-0.5 active:translate-y-0 active:shadow-resting",
-        destructive: "bg-destructive text-destructive-foreground shadow-resting hover:shadow-hover hover:-translate-y-0.5 active:translate-y-0 active:shadow-resting",
-        outline: "border-2 border-border bg-transparent shadow-resting hover:shadow-hover hover:-translate-y-0.5 active:translate-y-0 active:shadow-resting hover:bg-accent/10",
-        secondary: "bg-secondary text-secondary-foreground shadow-resting hover:shadow-hover hover:-translate-y-0.5 active:translate-y-0 active:shadow-resting",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "underline-offset-4 hover:underline text-primary",
-      },
-      size: {
-        default: "h-11 py-2 px-6",
-        sm: "h-9 px-4 rounded-xl",
-        lg: "h-12 px-10 rounded-xl text-base",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  },
-);
+export interface ButtonProps extends MuiButtonProps {
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link' | any;
+}
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-  VariantProps<typeof buttonVariants> { }
+const StyledButton = styled(MuiButton, {
+  shouldForwardProp: (prop) => prop !== 'variant' && prop !== 'size',
+})<any>(({ theme, variant, size }) => {
+  const isDestructive = variant === 'destructive';
+  const isOutline = variant === 'outline';
+  const isGhost = variant === 'ghost';
+  const isLink = variant === 'link';
+  const isSecondary = variant === 'secondary';
+
+  return {
+    borderRadius: '12px',
+    textTransform: 'none',
+    fontWeight: 700,
+    fontFamily: '"Space Grotesk", sans-serif',
+    transition: 'all 0.2s ease',
+    
+    ...(variant === 'default' || !variant ? {
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.primary.contrastText,
+      '&:hover': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.8),
+        transform: 'translateY(-2px)',
+        boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
+      },
+    } : {}),
+
+    ...(isDestructive ? {
+      backgroundColor: theme.palette.error.main,
+      color: theme.palette.error.contrastText,
+      '&:hover': {
+        backgroundColor: alpha(theme.palette.error.main, 0.8),
+        transform: 'translateY(-2px)',
+        boxShadow: `0 8px 20px ${alpha(theme.palette.error.main, 0.3)}`,
+      },
+    } : {}),
+
+    ...(isOutline ? {
+      backgroundColor: 'transparent',
+      border: `2px solid ${alpha(theme.palette.divider, 0.2)}`,
+      color: theme.palette.text.primary,
+      '&:hover': {
+        borderColor: theme.palette.primary.main,
+        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+        transform: 'translateY(-2px)',
+      },
+    } : {}),
+
+    ...(isSecondary ? {
+      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+      color: theme.palette.primary.main,
+      '&:hover': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.15),
+        transform: 'translateY(-2px)',
+      },
+    } : {}),
+
+    ...(isGhost ? {
+      backgroundColor: 'transparent',
+      color: theme.palette.text.secondary,
+      '&:hover': {
+        backgroundColor: alpha(theme.palette.text.primary, 0.05),
+        color: theme.palette.text.primary,
+      },
+    } : {}),
+
+    ...(isLink ? {
+      backgroundColor: 'transparent',
+      color: theme.palette.primary.main,
+      textDecoration: 'underline',
+      '&:hover': {
+        backgroundColor: 'transparent',
+        textDecoration: 'none',
+      },
+    } : {}),
+
+    ...(size === 'sm' ? {
+      padding: '6px 16px',
+      fontSize: '0.8125rem',
+    } : {}),
+
+    ...(size === 'lg' ? {
+      padding: '12px 32px',
+      fontSize: '1rem',
+    } : {}),
+  };
+});
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
+  ({ variant = 'default', size = 'medium', ...props }, ref) => {
     return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
+      <StyledButton
         ref={ref}
+        variant={variant as any}
+        size={size as any}
         {...props}
       />
     );
   },
 );
+
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button };

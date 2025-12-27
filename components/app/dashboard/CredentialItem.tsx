@@ -100,7 +100,7 @@ export default function CredentialItem({
 
       {/* Info */}
       <Box sx={{ ml: 2.5, flexGrow: 1, minWidth: 0 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', noWrap: true, lineHeight: 1.2 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', noWrap: true, lineHeight: 1.2, fontFamily: '"Space Grotesk", sans-serif' }}>
           {credential.name}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', noWrap: true, mt: 0.5 }}>
@@ -153,9 +153,9 @@ export default function CredentialItem({
         PaperProps={{
           sx: {
             borderRadius: '16px',
-            bgcolor: 'rgba(10, 10, 10, 0.9)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            bgcolor: 'rgba(10, 10, 10, 0.95)',
+            backdropFilter: 'blur(25px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             backgroundImage: 'none',
             minWidth: '180px'
           }
@@ -179,9 +179,9 @@ export default function CredentialItem({
         PaperProps={{
           sx: {
             borderRadius: '16px',
-            bgcolor: 'rgba(10, 10, 10, 0.9)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            bgcolor: 'rgba(10, 10, 10, 0.95)',
+            backdropFilter: 'blur(25px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             backgroundImage: 'none',
             minWidth: '150px'
           }

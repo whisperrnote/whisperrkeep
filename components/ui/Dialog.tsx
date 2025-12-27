@@ -1,4 +1,6 @@
 import { ReactNode } from "react";
+import { Dialog as MuiDialog, DialogContent, IconButton, Box, alpha } from "@mui/material";
+import { X as CloseIcon } from "lucide-react";
 
 export function Dialog({
   open,
@@ -11,25 +13,51 @@ export function Dialog({
   children: ReactNode;
   className?: string;
 }) {
-  if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div
-        className={
-          "relative bg-background border border-border rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto text-foreground " +
-          className
+    <MuiDialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          bgcolor: 'rgba(10, 10, 10, 0.95)',
+          backdropFilter: 'blur(25px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '24px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          backgroundImage: 'none',
+          color: 'white',
+          position: 'relative',
+          overflow: 'visible'
         }
+      }}
+      sx={{
+        '& .MuiBackdrop-root': {
+          bgcolor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)'
+        }
+      }}
+    >
+      <IconButton
+        onClick={onClose}
+        sx={{
+          position: 'absolute',
+          right: 16,
+          top: 16,
+          color: 'rgba(255, 255, 255, 0.4)',
+          zIndex: 10,
+          '&:hover': {
+            color: 'white',
+            bgcolor: 'rgba(255, 255, 255, 0.05)'
+          }
+        }}
       >
-        <button
-          className="absolute top-3 right-3 text-muted-foreground hover:text-foreground text-xl w-6 h-6 flex items-center justify-center rounded-full hover:bg-accent transition-colors z-10"
-          onClick={onClose}
-          aria-label="Close"
-          type="button"
-        >
-          ×
-        </button>
+        <CloseIcon size={20} />
+      </IconButton>
+      <DialogContent sx={{ p: 0 }}>
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </MuiDialog>
   );
 }

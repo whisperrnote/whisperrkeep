@@ -164,8 +164,8 @@ export default function CredentialDetail({
       PaperProps={{
         sx: {
           width: { xs: '100%', sm: 440 },
-          bgcolor: 'rgba(10, 10, 10, 0.8)',
-          backdropFilter: 'blur(30px) saturate(180%)',
+          bgcolor: 'rgba(10, 10, 10, 0.95)',
+          backdropFilter: 'blur(25px) saturate(180%)',
           borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
           backgroundImage: 'none',
           boxShadow: '-10px 0 40px rgba(0, 0, 0, 0.5)',
@@ -185,7 +185,7 @@ export default function CredentialDetail({
         <IconButton onClick={onClose} sx={{ color: 'text.secondary' }}>
           {isMobile ? <ArrowLeft size={20} /> : <X size={20} />}
         </IconButton>
-        <Typography variant="h6" sx={{ fontWeight: 900, fontFamily: 'var(--font-space-grotesk)' }}>
+        <Typography variant="h6" sx={{ fontWeight: 900, fontFamily: '"Space Grotesk", sans-serif' }}>
           Credential Details
         </Typography>
       </Box>
