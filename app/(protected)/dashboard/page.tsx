@@ -44,7 +44,11 @@ import {
   Skeleton,
   Fade
 } from "@mui/material";
-import { Folder, ChevronDown, Plus, Search, Sparkles } from "lucide-react";
+import FolderIcon from "@mui/icons-material/Folder";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
