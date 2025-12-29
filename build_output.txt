@@ -1,0 +1,12 @@
+
+> auth@0.1.0 build
+> next build
+
+ ⚠ Warning: Found multiple lockfiles. Selecting /home/nathfavour/code/whisperrnote/package-lock.json.
+   Consider removing the lockfiles at:
+   * /home/nathfavour/code/whisperrnote/whisperrkeep/package-lock.json
+
+   ▲ Next.js 15.4.7
+   - Environments: .env
+
+   Creating an optimized production build ...

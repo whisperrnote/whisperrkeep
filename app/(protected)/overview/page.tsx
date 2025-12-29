@@ -290,7 +290,7 @@ export default function OverviewPage() {
             { label: 'Recent Activity', value: Math.min(stats.totalCreds, 5), icon: AccessTimeIcon, color: '#F59E0B' },
             { label: 'Security Alerts', value: 0, icon: WarningIcon, color: '#EF4444' }
           ].map((stat, i) => (
-            <Grid item xs={6} md={3} key={i}>
+            <Grid size={{ xs: 6, md: 3 }} key={i}>
               <Paper sx={{ 
                 p: 3, 
                 borderRadius: '24px', 
@@ -327,7 +327,7 @@ export default function OverviewPage() {
 
         <Grid container spacing={3}>
           {/* Recent Items */}
-          <Grid item xs={12} md={7}>
+          <Grid size={{ xs: 12, md: 7 }}>
             <Paper sx={{ 
               p: 4, 
               borderRadius: '28px', 
@@ -402,7 +402,7 @@ export default function OverviewPage() {
           </Grid>
 
           {/* Duplicate Items */}
-          <Grid item xs={12} md={5}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <Paper sx={{ 
               p: 4, 
               borderRadius: '28px', 

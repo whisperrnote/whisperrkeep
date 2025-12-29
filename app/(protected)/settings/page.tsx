@@ -480,7 +480,7 @@ export default function SettingsPage() {
 
           <Grid container spacing={3}>
             {/* Profile Settings */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <SettingsCard title="Profile" icon={PersonIcon}>
                 <Stack spacing={3}>
                   <TextField
@@ -513,7 +513,7 @@ export default function SettingsPage() {
             </Grid>
 
             {/* Security Settings */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <SettingsCard title="Security" icon={ShieldIcon}>
                 <Stack spacing={3}>
                   <Button
@@ -570,7 +570,7 @@ export default function SettingsPage() {
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>Vault Auto-Lock</Typography>
                     <Grid container spacing={1} sx={{ mb: 2 }}>
                       {[5, 10, 15, 30].map((minutes) => (
-                        <Grid item xs={3} key={minutes}>
+                        <Grid size={{ xs: 3 }} key={minutes}>
                           <Button
                             fullWidth
                             variant={vaultTimeout === minutes ? "contained" : "outlined"}
@@ -602,7 +602,7 @@ export default function SettingsPage() {
             </Grid>
 
             {/* Folder Management */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <SettingsCard title="Folders" icon={FolderIcon}>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
                   <Button size="small" onClick={() => openFolderModal()} startIcon={<AddIcon sx={{ fontSize: 16 }} />}>
@@ -634,7 +634,7 @@ export default function SettingsPage() {
             </Grid>
 
             {/* Data Management */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <SettingsCard title="Data" icon={DownloadIcon}>
                 <Stack spacing={2}>
                   <Button
@@ -660,10 +660,10 @@ export default function SettingsPage() {
             </Grid>
 
             {/* Danger Zone */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <SettingsCard title="Danger Zone" icon={WarningIcon} danger>
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#FF3B30', mb: 1 }}>Delete Account</Typography>
                     <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
                       Permanently delete your account and all associated data. This action cannot be undone.
@@ -678,7 +678,7 @@ export default function SettingsPage() {
                       Delete Account
                     </Button>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#FF3B30', mb: 1 }}>Reset Vault</Typography>
                     <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
                       Wipe all encrypted data but keep your account. You will be prompted to set a new master password.

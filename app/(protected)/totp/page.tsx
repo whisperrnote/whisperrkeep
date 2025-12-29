@@ -332,7 +332,7 @@ export default function TOTPPage() {
                 );
               })
               .map((totp) => (
-                <Grid item xs={12} md={6} lg={4} key={totp.$id}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }} key={totp.$id}>
                   <TOTPCard totp={totp} />
                 </Grid>
               ))}

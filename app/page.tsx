@@ -6,6 +6,7 @@ import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import PublicIcon from "@mui/icons-material/Public";
+import SyncIcon from "@mui/icons-material/Sync";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import StarIcon from "@mui/icons-material/Star";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -304,7 +305,7 @@ export default function LandingPage() {
                 { label: 'Recent Activity', val: '3', icon: AccessTimeIcon, color: '#FF9800' },
                 { label: 'Security Alerts', val: '1', icon: WarningIcon, color: '#FF4D4D' },
               ].map((stat, i) => (
-                <Grid item xs={6} md={3} key={i}>
+                <Grid size={{ xs: 6, md: 3 }} key={i}>
                   <Paper sx={{ 
                     p: 2.5, 
                     borderRadius: '20px', 
@@ -325,7 +326,7 @@ export default function LandingPage() {
             </Grid>
 
             <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Paper sx={{ 
                   p: 3, 
                   borderRadius: '24px', 
@@ -342,7 +343,7 @@ export default function LandingPage() {
                   </Stack>
                 </Paper>
               </Grid>
-              <Grid item xs={12} md={8}>
+              <Grid size={{ xs: 12, md: 8 }}>
                 <Paper sx={{ 
                   p: 3, 
                   borderRadius: '24px', 
@@ -411,7 +412,7 @@ export default function LandingPage() {
 
           <Grid container spacing={4}>
             {features.map((feature, i) => (
-              <Grid item xs={12} sm={6} md={4} key={i}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
                 <Paper sx={{ 
                   p: 4, 
                   height: '100%', 
@@ -452,7 +453,7 @@ export default function LandingPage() {
       <Box sx={{ py: 15 }}>
         <Container maxWidth="lg">
           <Grid container spacing={8} alignItems="center">
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="h3" sx={{ fontWeight: 900, mb: 3, fontFamily: 'var(--font-space-grotesk)' }}>
                 Your Security Is Our Priority
               </Typography>
@@ -482,7 +483,7 @@ export default function LandingPage() {
                 ))}
               </Stack>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ 
                 position: 'relative',
                 '&::before': {
@@ -528,7 +529,7 @@ export default function LandingPage() {
 
           <Grid container spacing={4}>
             {testimonials.map((t, i) => (
-              <Grid item xs={12} md={4} key={i}>
+              <Grid size={{ xs: 12, md: 4 }} key={i}>
                 <Paper sx={{ 
                   p: 5, 
                   height: '100%', 

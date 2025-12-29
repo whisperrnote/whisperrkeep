@@ -310,7 +310,7 @@ export default function NewCredentialPage() {
             {formData.type === "credential" ? (
               <>
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       label="Name"
@@ -327,7 +327,7 @@ export default function NewCredentialPage() {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       label="Website URL"
@@ -394,7 +394,7 @@ export default function NewCredentialPage() {
                 </Box>
 
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <FormControl fullWidth variant="outlined">
                       <InputLabel>Folder</InputLabel>
                       <Select
@@ -415,7 +415,7 @@ export default function NewCredentialPage() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       label="Tags"

@@ -487,7 +487,7 @@ export default function DashboardPage() {
               <SectionTitle>Recent Items</SectionTitle>
               <Grid container spacing={2}>
                 {recentCredentials.map((cred) => (
-                  <Grid item xs={12} key={`recent-${cred.$id}`}>
+                  <Grid size={{ xs: 12 }} key={`recent-${cred.$id}`}>
                     <CredentialItem
                       credential={cred}
                       onCopy={handleCopy}

@@ -149,7 +149,7 @@ export default function ImportPage() {
       </Box>
 
       <Grid container spacing={4}>
-        <Grid item xs={12} md={7}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={3}>
             <Paper sx={{ 
               p: 4, 
@@ -304,7 +304,7 @@ export default function ImportPage() {
           </Stack>
         </Grid>
 
-        <Grid item xs={12} md={5}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <Paper sx={{ 
             p: 4, 
             borderRadius: '28px', 
