@@ -541,7 +541,7 @@ export default function LandingPage() {
                 }}>
                   <Stack direction="row" spacing={0.5} sx={{ mb: 3 }}>
                     {[...Array(t.stars)].map((_, j) => (
-                      <StarIcon key={j} sx={{ fontSize: 18, color: "#FFD700" }} />
+                      <StarIcon key={j} sx={{ fontSize: 18, color: "#00F5FF" }} />
                     ))}
                   </Stack>
                   <Typography variant="body1" sx={{ fontStyle: 'italic', mb: 4, color: 'rgba(255, 255, 255, 0.8)', lineHeight: 1.7 }}>
