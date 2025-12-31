@@ -45,22 +45,15 @@ export function getSourceURL(): string {
 }
 
 /**
- * Open the IDM authentication popup
+ * Open the IDM authentication popup or redirect if necessary
  */
 export function openAuthPopup(): Window | null {
   const authURL = getAuthURL();
-  const loginPath =
-    process.env.NEXT_PUBLIC_AUTH_LOGIN_PATH || "/login";
+  const loginPath = process.env.NEXT_PUBLIC_AUTH_LOGIN_PATH || "/login";
   const normalizedLoginPath = loginPath.startsWith("/")
     ? loginPath
     : `/${loginPath}`;
-  /*
-   * Add source param so IDM knows where to redirect back
-   * We want to come back to /masterpass to unlock the vault
-   * 
-   * NOTE: Only for mobile devices where we want a full redirect experience.
-   * On desktop, we want an overlay/popup flow without main window redirect.
-   */
+
   const sourceURL = getSourceURL();
 
   // Simple check for mobile devices
@@ -68,22 +61,27 @@ export function openAuthPopup(): Window | null {
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   let fullUrl = `${authURL}${normalizedLoginPath}`;
+  const separator = normalizedLoginPath.includes("?") ? "&" : "?";
+  fullUrl = `${fullUrl}${separator}source=${encodeURIComponent(sourceURL)}`;
 
   if (isMobile) {
-    const separator = normalizedLoginPath.includes("?") ? "&" : "?";
-    fullUrl = `${fullUrl}${separator}source=${encodeURIComponent(sourceURL)}`;
+    window.location.assign(fullUrl);
+    return null; // Signals that we redirected
   }
 
   const popup = window.open(
-    fullUrl,
+    fullUrl.split('?')[0], // Don't pass source to popup to avoid inner redirect
     "auth_popup",
     "width=500,height=700,resizable=yes,scrollbars=yes",
   );
 
   if (!popup) {
-    throw new Error("Failed to open authentication popup. Please check popup settings.");
+    console.warn("Popup blocked, falling back to redirect in whisperrkeep");
+    window.location.assign(fullUrl);
+    return null;
   }
 
   return popup;
 }
+
 
