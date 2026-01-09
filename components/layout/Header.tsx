@@ -2,9 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import MenuIcon from "@mui/icons-material/Menu";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import SettingsBrightnessIcon from "@mui/icons-material/SettingsBrightness";
 import PersonIcon from "@mui/icons-material/Person";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -36,8 +33,6 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const theme = 'dark' as "light" | "dark" | "system";
-  const setTheme = (t: "light" | "dark" | "system") => {};
   const { user, logout } = useAppwrite();
   const { openAIModal } = useAI();
   const pathname = usePathname();
@@ -125,23 +120,6 @@ export function Header({ onMenuClick }: HeaderProps) {
               <AutoAwesomeIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>
-
-          <IconButton
-            onClick={() => {
-              const nextTheme =
-                theme === "light"
-                  ? "dark"
-                  : theme === "dark"
-                    ? "system"
-                    : "light";
-              setTheme(nextTheme);
-            }}
-            sx={{ color: 'rgba(255, 255, 255, 0.6)', '&:hover': { color: 'white', bgcolor: 'rgba(255, 255, 255, 0.05)' } }}
-          >
-            {theme === "light" && <LightModeIcon sx={{ fontSize: 20 }} />}
-            {theme === "dark" && <DarkModeIcon sx={{ fontSize: 20 }} />}
-            {theme === "system" && <SettingsBrightnessIcon sx={{ fontSize: 20 }} />}
-          </IconButton>
 
           <Box>
             <IconButton 
