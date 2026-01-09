@@ -3,8 +3,8 @@
  * Handles both http and https protocols
  */
 export function getAuthURL(): string {
-  const authSubdomain = process.env.AUTH_SUBDOMAIN || "accounts";
-  const appSubdomain = process.env.APP_SUBDOMAIN || "whisperrnote.space";
+  const authSubdomain = process.env.NEXT_PUBLIC_AUTH_SUBDOMAIN || "accounts";
+  const appSubdomain = process.env.NEXT_PUBLIC_DOMAIN || "whisperrnote.space";
 
   if (!appSubdomain) {
     throw new Error(
@@ -39,7 +39,7 @@ export function getSourceURL(): string {
   }
 
   // Server-side fallback
-  const appSubdomain = process.env.APP_SUBDOMAIN || "whisperrnote.space";
+  const appSubdomain = process.env.NEXT_PUBLIC_DOMAIN || "whisperrnote.space";
   const protocol = process.env.NODE_ENV === "development" ? "http:" : "https:";
   return `${protocol}//${appSubdomain}/masterpass`;
 }
