@@ -1,8 +1,5 @@
 "use client";
 
-import LightModeIcon from "@mui/icons-material/LightMode";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import SettingsBrightnessIcon from "@mui/icons-material/SettingsBrightness";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
@@ -32,8 +29,6 @@ import { useAI } from "@/app/context/AIContext";
 import { usePathname } from "next/navigation";
 
 export function Navbar() {
-  const theme = 'dark' as "light" | "dark" | "system";
-  const setTheme = (t: "light" | "dark" | "system") => {};
   const { user, logout, openIDMWindow } = useAppwrite();
   const { openAIModal } = useAI();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -115,23 +110,6 @@ export function Navbar() {
               </IconButton>
             </Tooltip>
           )}
-
-          <IconButton
-            onClick={() => {
-              const nextTheme =
-                theme === "light"
-                  ? "dark"
-                  : theme === "dark"
-                    ? "system"
-                    : "light";
-              setTheme(nextTheme);
-            }}
-            sx={{ color: 'rgba(255, 255, 255, 0.6)', '&:hover': { color: 'white', bgcolor: 'rgba(255, 255, 255, 0.05)' } }}
-          >
-            {theme === "light" && <LightModeIcon sx={{ fontSize: 20 }} />}
-            {theme === "dark" && <DarkModeIcon sx={{ fontSize: 20 }} />}
-            {theme === "system" && <SettingsBrightnessIcon sx={{ fontSize: 20 }} />}
-          </IconButton>
 
           <DropdownMenu
             trigger={
