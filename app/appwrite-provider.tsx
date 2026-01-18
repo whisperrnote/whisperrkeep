@@ -63,7 +63,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
   const verbose = process.env.NODE_ENV === "development";
 
   // Fetch current user and check master password status
-  const fetchUser = useCallback(async (isRetry = false) => {
+  const fetchUser = useCallback(async (isRetry = false, retryCount = 0) => {
     if (!isRetry) setLoading(true);
     try {
       const account = await appwriteAccount.get();
@@ -73,6 +73,13 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
         logDebug("[auth] account.get success", { hasAccount: !!account });
 
       if (account) {
+        // Clear the auth=success param from URL if it exists
+        if (typeof window !== 'undefined' && window.location.search.includes('auth=success')) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('auth');
+          window.history.replaceState({}, '', url.toString());
+        }
+
         const hasMp = await hasMasterpass(account.$id);
         const unlocked = masterPassCrypto.isVaultUnlocked();
         if (verbose)
@@ -87,6 +94,16 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
       return account;
     } catch (err: unknown) {
       const e = err as AppwriteError;
+      
+      // Check for auth=success signal in URL
+      const hasAuthSignal = typeof window !== 'undefined' && window.location.search.includes('auth=success');
+      
+      if (hasAuthSignal && retryCount < 3) {
+        logWarn(`[auth] Auth signal detected but session not found in keep. Retrying... (${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return fetchUser(true, retryCount + 1);
+      }
+
       if (verbose) logWarn("[auth] account.get error", { error: e });
 
       const isNetworkError = !e.response && (e.message?.includes('Network Error') || e.message?.includes('Failed to fetch'));
