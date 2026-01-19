@@ -20,12 +20,14 @@ import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
 import CircularProgress from "@mui/material/CircularProgress";
+import AppsIcon from "@mui/icons-material/Apps";
 import { alpha } from "@mui/material/styles";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { useAI } from "@/app/context/AIContext";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
+import EcosystemPortal from "../common/EcosystemPortal";
 
 const PasswordGenerator = dynamic(() => import("@/components/ui/PasswordGenerator"), { 
   loading: () => <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}><CircularProgress size={24} /></Box>,
@@ -36,7 +38,19 @@ export function Navbar() {
   const { user, logout, openIDMWindow } = useAppwrite();
   const { openAIModal } = useAI();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [isEcosystemPortalOpen, setIsEcosystemPortalOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.code === 'Space') {
+        e.preventDefault();
+        setIsEcosystemPortalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const isCorePage = [
     "/dashboard",
@@ -101,6 +115,18 @@ export function Navbar() {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip title="Whisperr Portal (Ctrl+Space)">
+            <IconButton
+              onClick={() => setIsEcosystemPortalOpen(true)}
+              sx={{ 
+                color: 'rgba(255, 255, 255, 0.6)', 
+                '&:hover': { color: '#00F5FF', bgcolor: 'rgba(255, 255, 255, 0.05)' } 
+              }}
+            >
+              <AppsIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
+
           {user && isCorePage && (
             <Tooltip title="AI Assistant">
               <IconButton
@@ -234,6 +260,10 @@ export function Navbar() {
           )}
         </Box>
       </Toolbar>
+      <EcosystemPortal 
+        open={isEcosystemPortalOpen} 
+        onClose={() => setIsEcosystemPortalOpen(false)} 
+      />
     </AppBar>
   );
 }
