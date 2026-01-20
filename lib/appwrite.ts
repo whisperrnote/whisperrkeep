@@ -72,6 +72,58 @@ export const appwriteAccount = getAccount();
 export const appwriteDatabases = getDatabases();
 export const appwriteAvatars = getAvatars();
 
+export { client, account, databases, storage, functions, ID, Query, Permission, Role, OAuthProvider };
+
+// --- USER SESSION ---
+
+export async function getCurrentUser(): Promise<any | null> {
+  try {
+    return await appwriteAccount.get();
+  } catch {
+    return null;
+  }
+}
+
+// Unified resolver: attempts global session then cookie-based fallback
+export async function resolveCurrentUser(req?: { headers: { get(k: string): string | null } } | null): Promise<any | null> {
+  const direct = await getCurrentUser();
+  if (direct && direct.$id) return direct;
+  if (req) {
+    const fallback = await getCurrentUserFromRequest(req as any);
+    if (fallback && (fallback as any).$id) return fallback;
+  }
+  return null;
+}
+
+// Per-request user fetch using incoming Cookie header
+export async function getCurrentUserFromRequest(req: { headers: { get(k: string): string | null } } | null | undefined): Promise<any | null> {
+  try {
+    if (!req) return null;
+    const cookieHeader = req.headers.get('cookie') || req.headers.get('Cookie');
+    if (!cookieHeader) return null;
+    
+    const endpoint = normalizeEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT);
+    const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+
+    const res = await fetch(`${endpoint}/account`, {
+      method: 'GET',
+      headers: {
+        'X-Appwrite-Project': projectId!,
+        'Cookie': cookieHeader,
+        'Accept': 'application/json'
+      },
+      cache: 'no-store'
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || typeof data !== 'object' || !data.$id) return null;
+    return data;
+  } catch (e) {
+    console.error('getCurrentUserFromRequest error', e);
+    return null;
+  }
+}
+
 export { ID, Query };
 
 function isFetchNetworkError(error: unknown): boolean {
