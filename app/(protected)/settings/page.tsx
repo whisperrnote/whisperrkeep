@@ -7,6 +7,7 @@ import PaletteIcon from "@mui/icons-material/Palette";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import UploadIcon from "@mui/icons-material/Upload";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import LogoutIcon from "@mui/icons-material/Logout";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -55,6 +56,7 @@ import {
   AppwriteService,
   updateUserProfile,
   exportAllUserData,
+  cloudBackup,
   deleteUserAccount,
   resetMasterpassAndWipe,
 } from "@/lib/appwrite";
@@ -305,9 +307,20 @@ export default function SettingsPage() {
       if (forDelete) {
         setDeleteStep("confirm");
       }
-    } catch (e: unknown) {
-      const err = e as { message?: string };
+    } catch (err: any) {
       toast.error(err.message || "Failed to export data.", { id: toastId });
+    }
+  };
+
+  const handleCloudBackup = async () => {
+    if (!user) return;
+    const toastId = toast.loading("Creating encrypted cloud backup...");
+    try {
+      await cloudBackup(user.$id);
+      toast.success("Encrypted cloud backup created successfully!", { id: toastId });
+    } catch (err: any) {
+      console.error("Cloud backup failed:", err);
+      toast.error(err.message || "Failed to create cloud backup.", { id: toastId });
     }
   };
 
@@ -637,6 +650,15 @@ export default function SettingsPage() {
             <Grid size={{ xs: 12, md: 6 }}>
               <SettingsCard title="Data" icon={DownloadIcon}>
                 <Stack spacing={2}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    startIcon={<CloudUploadIcon sx={{ fontSize: 18 }} />}
+                    onClick={handleCloudBackup}
+                    sx={{ borderRadius: '12px', py: 1.5, justifyContent: 'flex-start', px: 2, fontWeight: 700 }}
+                  >
+                    Secure Cloud Backup
+                  </Button>
                   <Button
                     variant="outlined"
                     fullWidth

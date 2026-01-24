@@ -84,9 +84,14 @@ export const getRealtime = () => {
 export const appwriteClient = getClient();
 export const appwriteAccount = getAccount();
 export const appwriteDatabases = getDatabases();
+export const appwriteStorage = getStorage();
 export const appwriteAvatars = getAvatars();
 export const appwriteRealtime = getRealtime();
 export const tablesDB = appwriteDatabases as any; // Alignment with new terminology
+
+export const APPWRITE_BUCKET_BACKUPS_ID = "backups";
+export const APPWRITE_BUCKET_ENCRYPTED_BACKUPS_ID = "encryptedDataBackups";
+export const APPWRITE_BUCKET_SECURE_DOCUMENTS_ID = "secureDocuments";
 
 export { ID, Query };
 
@@ -780,6 +785,17 @@ export class AppwriteService {
   }
 
   // List with automatic decryption and pagination
+  static async listRows<T extends Models.Row>(
+    tableId: string,
+    queries: string[] = [],
+  ): Promise<{ total: number; documents: T[] }> {
+    const response = await listDocumentsWithRetry(tableId, queries);
+    return {
+      total: response.total,
+      documents: response.documents as unknown as T[],
+    };
+  }
+
   static async listCredentials(
     userId: string,
     limit: number = 25,
@@ -1312,6 +1328,31 @@ export class AppwriteService {
       exportedAt: new Date().toISOString(),
     };
   }
+
+  // --- Storage Operations ---
+  static async cloudBackup(userId: string): Promise<Models.File> {
+    const data = await this.exportUserData(userId);
+    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const file = new File([blob], `whisperrkeep-backup-${new Date().getTime()}.json`, { type: "application/json" });
+
+    return await appwriteStorage.createFile(
+      APPWRITE_BUCKET_BACKUPS_ID,
+      ID.unique(),
+      file,
+      [
+        Permission.read(Role.user(userId)),
+        Permission.update(Role.user(userId)),
+        Permission.delete(Role.user(userId)),
+      ]
+    );
+  }
+
+  static async listCloudBackups(userId: string): Promise<Models.FileList> {
+    return await appwriteStorage.listFiles(
+      APPWRITE_BUCKET_BACKUPS_ID,
+      [Query.orderDesc("$createdAt")]
+    );
+  }
 }
 
 // --- 2FA / MFA Helpers (Following Official Appwrite Documentation) ---
@@ -1712,6 +1753,20 @@ export async function exportAllUserData(userId: string, options?: {
   folders?: boolean;
 }) {
   return await AppwriteService.exportUserData(userId, options);
+}
+
+/**
+ * Backup user data to cloud storage.
+ */
+export async function cloudBackup(userId: string) {
+  return await AppwriteService.cloudBackup(userId);
+}
+
+/**
+ * List user's cloud backups.
+ */
+export async function listCloudBackups(userId: string) {
+  return await AppwriteService.listCloudBackups(userId);
 }
 
 /**
