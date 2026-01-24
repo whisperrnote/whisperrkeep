@@ -2,6 +2,7 @@ import {
   Client,
   Account,
   Databases,
+  Storage,
   ID,
   Query,
   AuthenticationFactor,
@@ -60,6 +61,12 @@ let _databases: Databases | null = null;
 export const getDatabases = () => {
   if (!_databases) _databases = new Databases(getClient());
   return _databases;
+};
+
+let _storage: Storage | null = null;
+export const getStorage = () => {
+  if (!_storage) _storage = new Storage(getClient());
+  return _storage;
 };
 
 let _avatars: Avatars | null = null;
