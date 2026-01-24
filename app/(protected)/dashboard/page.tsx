@@ -49,6 +49,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import { appwriteRealtime, APPWRITE_DATABASE_ID, APPWRITE_COLLECTION_CREDENTIALS_ID } from "@/lib/appwrite";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -247,6 +248,19 @@ export default function DashboardPage() {
         .catch((err: unknown) => {
           console.error("Failed to fetch recent credentials:", err);
         });
+
+      // Realtime subscription for credentials
+      const channel = `databases.${APPWRITE_DATABASE_ID}.collections.${APPWRITE_COLLECTION_CREDENTIALS_ID}.documents`;
+      const unsubscribe = appwriteRealtime.subscribe(channel, (response) => {
+        // Appwrite Realtime payloads are not automatically decrypted
+        // For simplicity and correctness in this encrypted vault, 
+        // we'll trigger a refresh when a change is detected from another session
+        refreshCredentials();
+      });
+
+      return () => {
+        unsubscribe();
+      };
     }
   }, [user, loadAllCredentials]);
 
