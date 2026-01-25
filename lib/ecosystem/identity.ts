@@ -37,27 +37,49 @@ export async function ensureGlobalIdentity(user: any, force = false) {
         } catch (e: any) {
             if (e.code === 404) {
                 const username = user.prefs?.username || `user${user.$id.slice(0, 6)}`;
+                const profilePicId = user.prefs?.profilePicId || null;
 
-                profile = await appwriteDatabases.createDocument(
-                    CONNECT_DATABASE_ID,
-                    CONNECT_COLLECTION_ID_USERS,
-                    user.$id,
-                    {
-                        username,
-                        displayName: user.name || username,
-                        appsActive: ['keep'],
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        bio: user.prefs?.bio || '',
-                        avatarFileId: user.prefs?.profilePicId || null,
-                        privacySettings: JSON.stringify({ public: true, searchable: true })
-                    },
-                    [
-                        'read("any")',
-                        `update("user:${user.$id}")`,
-                        `delete("user:${user.$id}")`
-                    ]
-                );
+                const baseData = {
+                    username,
+                    displayName: user.name || username,
+                    appsActive: ['keep'],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    bio: user.prefs?.bio || '',
+                    privacySettings: JSON.stringify({ public: true, searchable: true })
+                };
+
+                const permissions = [
+                    'read("any")',
+                    `update("user:${user.$id}")`,
+                    `delete("user:${user.$id}")`
+                ];
+
+                const attempts = [
+                    { avatarFileId: profilePicId },
+                    { profilePicId: profilePicId },
+                    {}
+                ];
+
+                for (const attempt of attempts) {
+                    try {
+                        const payload = { ...baseData, ...attempt };
+                        profile = await appwriteDatabases.createDocument(
+                            CONNECT_DATABASE_ID,
+                            CONNECT_COLLECTION_ID_USERS,
+                            user.$id,
+                            payload,
+                            permissions
+                        );
+                        break;
+                    } catch (e: any) {
+                        const errStr = JSON.stringify(e).toLowerCase();
+                        if (errStr.includes('unknown attribute') || errStr.includes('invalid document structure')) {
+                            continue;
+                        }
+                        throw e;
+                    }
+                }
             } else {
                 throw e;
             }
