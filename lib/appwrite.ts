@@ -1773,6 +1773,14 @@ export async function listCloudBackups(userId: string) {
   return await AppwriteService.listCloudBackups(userId);
 }
 
+export function getFilePreview(bucketId: string, fileId: string, width: number = 64, height: number = 64) {
+  return appwriteStorage.getFilePreview(bucketId, fileId, width, height);
+}
+
+export function getProfilePicturePreview(fileId: string, width: number = 64, height: number = 64) {
+  return getFilePreview("profile_pictures", fileId, width, height);
+}
+
 /**
  * Delete user account and all associated data.
  * This is a hard delete and is irreversible.

@@ -25,6 +25,9 @@ import AppsIcon from "@mui/icons-material/Apps";
 import { useAI } from "@/app/context/AIContext";
 import { useState, useEffect } from "react";
 import EcosystemPortal from "../common/EcosystemPortal";
+import { fetchProfilePreview, getCachedProfilePreview } from "@/lib/profile-preview";
+import { getUserProfilePicId } from "@/lib/user-utils";
+import Avatar from "@mui/material/Avatar";
 
 // Pages that should use the simplified layout (no sidebar/header)
 const SIMPLIFIED_LAYOUT_PATHS = ["/"];
@@ -40,6 +43,30 @@ export function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEcosystemPortalOpen, setIsEcosystemPortalOpen] = useState(false);
+  const [profileUrl, setProfileUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const profilePicId = getUserProfilePicId(user);
+    const cached = getCachedProfilePreview(profilePicId || undefined);
+    if (cached !== undefined && mounted) {
+      setProfileUrl(cached ?? null);
+    }
+
+    const fetchPreview = async () => {
+      try {
+        if (profilePicId) {
+          const url = await fetchProfilePreview(profilePicId, 64, 64);
+          if (mounted) setProfileUrl(url as unknown as string);
+        } else if (mounted) setProfileUrl(null);
+      } catch (err) {
+        if (mounted) setProfileUrl(null);
+      }
+    };
+
+    fetchPreview();
+    return () => { mounted = false; };
+  }, [user]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -57,7 +84,7 @@ export function Header({ onMenuClick }: HeaderProps) {
     return null;
   }
 
-  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -149,13 +176,28 @@ export function Header({ onMenuClick }: HeaderProps) {
 
           <Box>
             <IconButton 
-              onClick={handleOpenMenu}
+              onClick={handleProfileClick}
               sx={{ 
-                color: 'rgba(255, 255, 255, 0.6)', 
-                '&:hover': { color: 'white', bgcolor: 'rgba(255, 255, 255, 0.05)' } 
+                p: 0.5,
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(0, 240, 255, 0.2)' } 
               }}
             >
-              <PersonIcon sx={{ fontSize: 20 }} />
+              <Avatar 
+                src={profileUrl || undefined}
+                sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  bgcolor: 'rgba(0, 240, 255, 0.1)',
+                  color: '#00F5FF',
+                  fontSize: '0.85rem',
+                  fontWeight: 800,
+                  borderRadius: '10px'
+                }}
+              >
+                {user?.name ? user.name[0].toUpperCase() : 'U'}
+              </Avatar>
             </IconButton>
             <Menu
               anchorEl={anchorEl}
@@ -177,13 +219,28 @@ export function Header({ onMenuClick }: HeaderProps) {
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <Box sx={{ px: 2.5, py: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'white' }}>
-                  {user?.name || user?.email}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.4)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {user?.email}
-                </Typography>
+              <Box sx={{ px: 2.5, py: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar 
+                  src={profileUrl || undefined}
+                  sx={{ 
+                    width: 40, 
+                    height: 40, 
+                    bgcolor: 'primary.main',
+                    color: '#000',
+                    borderRadius: '12px',
+                    fontWeight: 900
+                  }}
+                >
+                  {user?.name ? user.name[0].toUpperCase() : 'U'}
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'white', noWrap: true }}>
+                    {user?.name || user?.email}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.4)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {user?.email}
+                  </Typography>
+                </Box>
               </Box>
               <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
               <MenuItem 
