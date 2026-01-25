@@ -66,8 +66,15 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
   const fetchUser = useCallback(async (isRetry = false, retryCount = 0) => {
     if (!isRetry) setLoading(true);
     try {
+      // Step 1: Check hint
+      const hint = typeof window !== 'undefined' ? sessionStorage.getItem('whisperr_auth_hint') : null;
+      if (hint === 'true' && !retryCount) {
+        console.log('Optimistic keep hint detected');
+      }
+
       const account = await appwriteAccount.get();
       setUser(account);
+      sessionStorage.setItem('whisperr_auth_hint', 'true');
 
       if (verbose)
         logDebug("[auth] account.get success", { hasAccount: !!account });
@@ -100,6 +107,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
       }
       return account;
     } catch (err: unknown) {
+      sessionStorage.removeItem('whisperr_auth_hint');
       const e = err as AppwriteError;
 
       // Check for auth=success signal in URL
