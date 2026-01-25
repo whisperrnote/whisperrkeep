@@ -77,7 +77,7 @@ export function AppwriteProvider({ children }: { children: ReactNode }) {
         try {
           const { ensureGlobalIdentity } = await import('@/lib/ecosystem/identity');
           ensureGlobalIdentity(account);
-        } catch (e) {
+        } catch (e: any) {
           logWarn('[auth] Ecosystem identity handshake failed', e);
         }
         // Clear the auth=success param from URL if it exists
