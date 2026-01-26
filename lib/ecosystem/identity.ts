@@ -58,12 +58,16 @@ export async function ensureGlobalIdentity(user: any, force = false) {
                 const attempts = [
                     { avatarFileId: profilePicId },
                     { profilePicId: profilePicId },
+                    { avatarUrl: profilePicId },
                     {}
                 ];
 
                 for (const attempt of attempts) {
                     try {
-                        const payload = { ...baseData, ...attempt };
+                        const payload = { ...baseData };
+                        const key = Object.keys(attempt)[0];
+                        if (key && profilePicId) payload[key] = profilePicId;
+
                         profile = await appwriteDatabases.createDocument(
                             CONNECT_DATABASE_ID,
                             CONNECT_COLLECTION_ID_USERS,
@@ -73,7 +77,7 @@ export async function ensureGlobalIdentity(user: any, force = false) {
                         );
                         break;
                     } catch (e: any) {
-                        const errStr = JSON.stringify(e).toLowerCase();
+                        const errStr = (e.message || JSON.stringify(e)).toLowerCase();
                         if (errStr.includes('unknown attribute') || errStr.includes('invalid document structure')) {
                             continue;
                         }
