@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -H localhost",
+    "dev": "next dev --turbopack -H 127.0.0.1",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -18,7 +18,7 @@
     "@simplewebauthn/browser": "^9.0.1",
     "@simplewebauthn/server": "9.0.3",
     "@types/jest": "^30.0.0",
-    "appwrite": "^21.5.0",
+    "appwrite": "^18.1.1",
     "base64url": "3.0.1",
     "jest": "^30.2.0",
     "lucide-react": "^0.562.0",

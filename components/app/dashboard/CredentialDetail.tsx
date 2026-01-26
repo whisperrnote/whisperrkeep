@@ -25,9 +25,6 @@ import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import GppGoodIcon from "@mui/icons-material/GppGood";
 import DescriptionIcon from "@mui/icons-material/Description";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import TaskIcon from "@mui/icons-material/AssignmentOutlined";
-import EventIcon from "@mui/icons-material/EventOutlined";
-import NoteIcon from "@mui/icons-material/DescriptionOutlined";
 import { Credentials } from "@/types/appwrite";
 import { useAI } from "@/app/context/AIContext";
 import { useSudo } from "@/app/context/SudoContext";
@@ -356,64 +353,7 @@ export default function CredentialDetail({
 
           <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} />
 
-          {/* Ecosystem Links */}
-          <Box>
-            <Typography variant="caption" sx={{ fontWeight: 700, color: '#10b981', textTransform: 'uppercase', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              Ecosystem Connections
-            </Typography>
-            <Stack spacing={1.5}>
-              {credential.tags?.filter(t => t.startsWith('source:whisperrflow:task:')).map((tag, i) => {
-                const id = tag.split(':')[3];
-                return (
-                  <Button
-                    key={i}
-                    size="small"
-                    startIcon={<TaskIcon sx={{ fontSize: 16 }} />}
-                    endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
-                    onClick={() => window.open(`https://flow.whisperrnote.space/tasks?taskId=${id}`, '_blank')}
-                    sx={{ justifyContent: 'flex-start', bgcolor: 'rgba(16, 185, 129, 0.05)', color: '#10b981', borderRadius: '10px', p: 1.5 }}
-                  >
-                    View Task in Flow
-                  </Button>
-                );
-              })}
-              {credential.tags?.filter(t => t.startsWith('source:whisperrflow:event:')).map((tag, i) => {
-                const id = tag.split(':')[3];
-                return (
-                  <Button
-                    key={i}
-                    size="small"
-                    startIcon={<EventIcon sx={{ fontSize: 16 }} />}
-                    endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
-                    onClick={() => window.open(`https://flow.whisperrnote.space/events?eventId=${id}`, '_blank')}
-                    sx={{ justifyContent: 'flex-start', bgcolor: 'rgba(16, 185, 129, 0.05)', color: '#10b981', borderRadius: '10px', p: 1.5 }}
-                  >
-                    View Event in Flow
-                  </Button>
-                );
-              })}
-              {credential.tags?.filter(t => t.startsWith('source:whisperrnote:')).map((tag, i) => {
-                const id = tag.split(':')[2];
-                return (
-                  <Button
-                    key={i}
-                    size="small"
-                    startIcon={<NoteIcon sx={{ fontSize: 16 }} />}
-                    endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
-                    onClick={() => window.open(`https://note.whisperrnote.space/notes?openNoteId=${id}`, '_blank')}
-                    sx={{ justifyContent: 'flex-start', bgcolor: 'rgba(0, 245, 255, 0.05)', color: '#00F5FF', borderRadius: '10px', p: 1.5 }}
-                  >
-                    View Source Note
-                  </Button>
-                );
-              })}
-              {(!credential.tags || !credential.tags.some(t => t.startsWith('source:'))) && (
-                <Typography variant="body2" sx={{ opacity: 0.3, fontStyle: 'italic', fontSize: '0.8rem' }}>No ecosystem connections</Typography>
-              )}
-            </Stack>
-          </Box>
-
-          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} />
+          {/* Metadata */}
           <Box>
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
               <CalendarTodayIcon sx={{ fontSize: 14 }} /> Information

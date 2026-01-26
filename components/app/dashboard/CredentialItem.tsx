@@ -13,22 +13,13 @@ import {
   useTheme,
   useMediaQuery
 } from "@mui/material";
-import ContentCopyIcon from "@mui/icons-material/ContentCopyOutlined";
-import EditIcon from "@mui/icons-material/EditOutlined";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVertOutlined";
-import PersonIcon from "@mui/icons-material/PersonOutlineOutlined";
-import LockIcon from "@mui/icons-material/LockOutlined";
-import TaskIcon from "@mui/icons-material/AssignmentOutlined";
-import EventIcon from "@mui/icons-material/EventOutlined";
-import NoteIcon from "@mui/icons-material/DescriptionOutlined";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PersonIcon from "@mui/icons-material/Person";
+import LockIcon from "@mui/icons-material/Lock";
 import type { Credentials } from "@/types/appwrite.d";
-import { TaskSelectorModal } from "../../common/TaskSelectorModal";
-import { EventSelectorModal } from "../../common/EventSelectorModal";
-import { NoteSelectorModal } from "../../common/NoteSelectorModal";
-import { AppwriteService } from "@/lib/appwrite";
-import { useToast } from "@/hooks/useToast";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function CredentialItem({
   credential,
@@ -47,60 +38,8 @@ export default function CredentialItem({
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { user } = useAuth();
-  const { showSuccess, showError } = useToast();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [copyAnchorEl, setCopyAnchorEl] = useState<null | HTMLElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
-  
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
-
-  const handleRightClick = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setContextMenu({ x: event.clientX, y: event.clientY });
-  };
-
-  const handleContextMenuClose = () => {
-    setContextMenu(null);
-  };
-
-  const handleAttach = async (type: 'task' | 'event' | 'note', id: string) => {
-    setIsTaskModalOpen(false);
-    setIsEventModalOpen(false);
-    setIsNoteModalOpen(false);
-    
-    const tag = `source:whisperrflow:${type}:${id}`;
-    const currentTags = credential.tags || [];
-    if (currentTags.includes(tag)) return;
-
-    try {
-      await AppwriteService.updateCredential(credential.$id, {
-        tags: [...currentTags, tag]
-      });
-      showSuccess(`Attached ${type} successfully`);
-    } catch (err) {
-      showError(`Failed to attach ${type}`);
-    }
-  };
-
-  const handleAttachNote = async (noteId: string) => {
-    setIsNoteModalOpen(false);
-    const tag = `source:whisperrnote:${noteId}`;
-    const currentTags = credential.tags || [];
-    if (currentTags.includes(tag)) return;
-
-    try {
-      await AppwriteService.updateCredential(credential.$id, {
-        tags: [...currentTags, tag]
-      });
-      showSuccess(`Attached note successfully`);
-    } catch (err) {
-      showError(`Failed to attach note`);
-    }
-  };
 
   const handleCopy = (value: string) => {
     onCopy(value);
@@ -123,7 +62,6 @@ export default function CredentialItem({
     <Paper
       elevation={0}
       onClick={onClick}
-      onContextMenu={handleRightClick}
       sx={{
         p: 2,
         mb: 1.5,
@@ -263,58 +201,6 @@ export default function CredentialItem({
           <ListItemText primary="Delete" primaryTypographyProps={{ fontWeight: 700 }} />
         </MenuItem>
       </Menu>
-
-      {/* Desktop Context Menu */}
-      <Menu
-        open={contextMenu !== null}
-        onClose={handleContextMenuClose}
-        anchorReference="anchorPosition"
-        anchorPosition={contextMenu ? { top: contextMenu.y, left: contextMenu.x } : undefined}
-        PaperProps={{
-          sx: {
-            borderRadius: '16px',
-            bgcolor: 'rgba(10, 10, 10, 0.95)',
-            backdropFilter: 'blur(25px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backgroundImage: 'none',
-            minWidth: '200px'
-          }
-        }}
-      >
-        <MenuItem onClick={() => { setIsTaskModalOpen(true); handleContextMenuClose(); }}>
-          <ListItemIcon><TaskIcon sx={{ fontSize: 18, color: '#10b981' }} /></ListItemIcon>
-          <ListItemText primary="Attach Task (Flow)" primaryTypographyProps={{ fontWeight: 600 }} />
-        </MenuItem>
-        <MenuItem onClick={() => { setIsEventModalOpen(true); handleContextMenuClose(); }}>
-          <ListItemIcon><EventIcon sx={{ fontSize: 18, color: '#10b981' }} /></ListItemIcon>
-          <ListItemText primary="Attach Event (Flow)" primaryTypographyProps={{ fontWeight: 600 }} />
-        </MenuItem>
-        <MenuItem onClick={() => { setIsNoteModalOpen(true); handleContextMenuClose(); }}>
-          <ListItemIcon><NoteIcon sx={{ fontSize: 18, color: '#00F5FF' }} /></ListItemIcon>
-          <ListItemText primary="Attach Note" primaryTypographyProps={{ fontWeight: 600 }} />
-        </MenuItem>
-        <Box sx={{ my: 0.5, height: '1px', bgcolor: 'rgba(255, 255, 255, 0.05)' }} />
-        <MenuItem onClick={() => { onEdit(); handleContextMenuClose(); }}>
-          <ListItemIcon><EditIcon sx={{ fontSize: 18 }} /></ListItemIcon>
-          <ListItemText primary="Edit Item" />
-        </MenuItem>
-      </Menu>
-
-      <TaskSelectorModal 
-        isOpen={isTaskModalOpen} 
-        onClose={() => setIsTaskModalOpen(false)} 
-        onSelect={(id) => handleAttach('task', id)} 
-      />
-      <EventSelectorModal 
-        isOpen={isEventModalOpen} 
-        onClose={() => setIsEventModalOpen(false)} 
-        onSelect={(id) => handleAttach('event', id)} 
-      />
-      <NoteSelectorModal 
-        isOpen={isNoteModalOpen} 
-        onClose={() => setIsNoteModalOpen(false)} 
-        onSelect={handleAttachNote} 
-      />
     </Paper>
   );
 }
