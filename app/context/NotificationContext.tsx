@@ -111,7 +111,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      if (typeof unsub === 'function') unsub();
+      if (typeof unsub === 'function') (unsub as any)();
       else (unsub as any).unsubscribe?.();
     };
   }, [user?.$id, calculateUnread]);
