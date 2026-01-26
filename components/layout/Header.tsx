@@ -1,40 +1,40 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import MenuIcon from "@mui/icons-material/Menu";
-import PersonIcon from "@mui/icons-material/Person";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import LogoutIcon from "@mui/icons-material/Logout";
-import SettingsIcon from "@mui/icons-material/Settings";
-import { useTheme } from "@mui/material";
-import { useAppwrite } from "@/app/appwrite-provider";
 import { 
   AppBar, 
   Toolbar, 
   IconButton, 
   Typography, 
   Box, 
-  Button, 
   alpha,
   Tooltip,
   Menu,
   MenuItem,
-  Divider
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Avatar,
+  InputBase
 } from "@mui/material";
-import AppsIcon from "@mui/icons-material/Apps";
+import { 
+  Bell, 
+  Sparkles, 
+  LayoutGrid, 
+  Settings, 
+  LogOut, 
+  Download, 
+  CheckCircle, 
+  XCircle, 
+  Clock,
+  Menu as MenuIcon,
+  Search
+} from "lucide-react";
+import { useAppwrite } from "@/app/appwrite-provider";
 import { useAI } from "@/app/context/AIContext";
 import { useNotifications } from "@/app/context/NotificationContext";
 import { useState, useEffect } from "react";
 import EcosystemPortal from "../common/EcosystemPortal";
-import { fetchProfilePreview, getCachedProfilePreview } from "@/lib/profile-preview";
-import { getUserProfilePicId } from "@/lib/user-utils";
-import Avatar from "@mui/material/Avatar";
-import { 
-  Bell as BellIcon,
-  CheckCircle as CheckCircleIcon,
-  XCircle as XCircleIcon,
-  Clock as ClockIcon
-} from "lucide-react";
 
 // Pages that should use the simplified layout (no sidebar/header)
 const SIMPLIFIED_LAYOUT_PATHS = ["/"];
@@ -49,33 +49,9 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { openAIModal } = useAI();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const pathname = usePathname();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [anchorElAccount, setAnchorElAccount] = useState<null | HTMLElement>(null);
   const [anchorElNotifications, setAnchorElNotifications] = useState<null | HTMLElement>(null);
   const [isEcosystemPortalOpen, setIsEcosystemPortalOpen] = useState(false);
-  const [profileUrl, setProfileUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    const profilePicId = getUserProfilePicId(user);
-    const cached = getCachedProfilePreview(profilePicId || undefined);
-    if (cached !== undefined && mounted) {
-      setProfileUrl(cached ?? null);
-    }
-
-    const fetchPreview = async () => {
-      try {
-        if (profilePicId) {
-          const url = await fetchProfilePreview(profilePicId, 64, 64);
-          if (mounted) setProfileUrl(url as unknown as string);
-        } else if (mounted) setProfileUrl(null);
-      } catch (err) {
-        if (mounted) setProfileUrl(null);
-      }
-    };
-
-    fetchPreview();
-    return () => { mounted = false; };
-  }, [user]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -88,33 +64,35 @@ export function Header({ onMenuClick }: HeaderProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Don't render the header on simplified layout pages
   if (SIMPLIFIED_LAYOUT_PATHS.includes(pathname)) {
     return null;
   }
 
-  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
+  const handleLogout = async () => {
+    setAnchorElAccount(null);
+    await logout();
   };
 
   return (
-    <AppBar
-      position="fixed"
-      sx={{
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        bgcolor: 'rgba(10, 10, 10, 0.8)',
+    <AppBar 
+      position="fixed" 
+      elevation={0}
+      sx={{ 
+        zIndex: 1201,
+        bgcolor: 'rgba(10, 10, 10, 0.95)',
         backdropFilter: 'blur(25px) saturate(180%)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: 'none',
         backgroundImage: 'none'
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', minHeight: 64 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Toolbar sx={{ 
+        gap: 2, 
+        '@media (min-width: 900px)': { gap: 4 },
+        px: { xs: 2, md: 3 }, 
+        minHeight: '72px' 
+      }}>
+        {/* Left: Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
           <IconButton
             onClick={onMenuClick}
             sx={{ 
@@ -123,64 +101,104 @@ export function Header({ onMenuClick }: HeaderProps) {
               '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' }
             }}
           >
-            <MenuIcon sx={{ fontSize: 20 }} />
+            <MenuIcon size={20} strokeWidth={1.5} />
           </IconButton>
+          <Box sx={{ 
+            width: 42, 
+            height: 42, 
+            bgcolor: 'rgba(255, 255, 255, 0.03)', 
+            border: '1px solid rgba(255, 255, 255, 0.1)', 
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden'
+          }}>
+            <Box sx={{ color: '#00F5FF', fontWeight: 900, fontSize: '1.2rem' }}>K</Box>
+          </Box>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              display: { xs: 'none', sm: 'block' },
+              fontWeight: 900, 
+              letterSpacing: '-0.05em',
+              fontFamily: 'var(--font-space-grotesk)',
+              color: 'white'
+            }}
+          >
+            WHISPERR<Box component="span" sx={{ color: '#00F5FF' }}>KEEP</Box>
+          </Typography>
+        </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box
-              sx={{ 
-                width: 32, 
-                height: 32, 
-                bgcolor: '#00F5FF', 
-                borderRadius: '8px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                color: '#000',
-                fontWeight: 900,
-                fontSize: '1.1rem'
-              }}
-            >
-              W
-            </Box>
-            <Typography
-              variant="h6"
+        {/* Center: Search */}
+        <Box sx={{ flexGrow: 1, maxWidth: 700, display: { xs: 'none', md: 'block' } }}>
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              bgcolor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              px: 2,
+              py: 0.5,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+              }
+            }}
+          >
+            <Search size={18} strokeWidth={1.5} color="rgba(255, 255, 255, 0.4)" />
+            <Box sx={{ width: 12 }} />
+            <InputBase
+              placeholder="Search vault, credentials, folders..."
+              fullWidth
               sx={{
-                fontWeight: 900,
-                display: { xs: 'none', sm: 'inline' },
-                fontFamily: 'var(--font-space-grotesk)',
-                letterSpacing: '-0.02em',
-                color: 'white'
+                color: 'text.primary',
+                fontSize: '0.9375rem',
+                fontWeight: 500,
+                '& .MuiInputBase-input::placeholder': {
+                  color: 'text.secondary',
+                  opacity: 0.5,
+                },
               }}
-            >
-              Whisperrkeep
-            </Typography>
+            />
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title="Notifications">
-            <IconButton
+        {/* Right: Actions */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+          <Tooltip title="Intelligence Feed">
+            <IconButton 
               onClick={(e) => setAnchorElNotifications(e.currentTarget)}
               sx={{ 
-                color: unreadCount > 0 ? '#00F5FF' : 'rgba(255, 255, 255, 0.6)',
-                bgcolor: unreadCount > 0 ? alpha('#00F5FF', 0.05) : 'transparent',
-                '&:hover': { bgcolor: alpha('#00F5FF', 0.1), color: '#00F5FF' },
-                position: 'relative'
+                color: unreadCount > 0 ? '#00F5FF' : 'rgba(255, 255, 255, 0.4)',
+                bgcolor: alpha('#00F5FF', 0.03),
+                border: '1px solid',
+                borderColor: unreadCount > 0 ? alpha('#00F5FF', 0.3) : alpha('#00F5FF', 0.1),
+                borderRadius: '12px',
+                width: 42,
+                height: 42,
+                position: 'relative',
+                '&:hover': { 
+                  bgcolor: alpha('#00F5FF', 0.08), 
+                  boxShadow: '0 0 15px rgba(0, 245, 255, 0.2)' 
+                }
               }}
             >
-              <BellIcon size={20} />
+              <Bell size={20} strokeWidth={1.5} />
               {unreadCount > 0 && (
                 <Box sx={{
                   position: 'absolute',
-                  top: 2,
-                  right: 2,
+                  top: -4,
+                  right: -4,
                   bgcolor: '#FF4D4D',
                   color: 'white',
-                  fontSize: '0.6rem',
+                  fontSize: '0.65rem',
                   fontWeight: 900,
-                  width: 16,
-                  height: 16,
+                  width: 18,
+                  height: 18,
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -193,224 +211,239 @@ export function Header({ onMenuClick }: HeaderProps) {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="AI Assistant">
-            <IconButton
+          <Tooltip title="Cognitive Link (AI)">
+            <IconButton 
               onClick={openAIModal}
               sx={{ 
-                color: '#00F5FF', 
-                '&:hover': { bgcolor: alpha('#00F5FF', 0.1) } 
+                color: '#00F5FF',
+                bgcolor: alpha('#00F5FF', 0.03),
+                border: '1px solid',
+                borderColor: alpha('#00F5FF', 0.1),
+                borderRadius: '12px',
+                width: 42,
+                height: 42,
+                '&:hover': { 
+                  bgcolor: alpha('#00F5FF', 0.08), 
+                  boxShadow: '0 0 15px rgba(0, 245, 255, 0.2)' 
+                }
               }}
             >
-              <AutoAwesomeIcon sx={{ fontSize: 20 }} />
+              <Sparkles size={20} strokeWidth={1.5} />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Whisperr Portal (Ctrl+Space)">
-            <IconButton
+            <IconButton 
               onClick={() => setIsEcosystemPortalOpen(true)}
               sx={{ 
-                color: 'rgba(255, 255, 255, 0.6)', 
-                '&:hover': { color: '#00F5FF', bgcolor: 'rgba(255, 255, 255, 0.05)' } 
+                color: '#00F5FF',
+                bgcolor: alpha('#00F5FF', 0.05),
+                border: '1px solid',
+                borderColor: alpha('#00F5FF', 0.1),
+                borderRadius: '12px',
+                width: 42,
+                height: 42,
+                animation: 'pulse-slow 4s infinite ease-in-out',
+                '@keyframes pulse-slow': {
+                  '0%': { boxShadow: '0 0 0 0 rgba(0, 245, 255, 0.2)' },
+                  '70%': { boxShadow: '0 0 0 10px rgba(0, 245, 255, 0)' },
+                  '100%': { boxShadow: '0 0 0 0 rgba(0, 245, 255, 0)' },
+                },
+                '&:hover': { 
+                  bgcolor: alpha('#00F5FF', 0.1), 
+                  borderColor: '#00F5FF',
+                  boxShadow: '0 0 15px rgba(0, 245, 255, 0.3)' 
+                }
               }}
             >
-              <AppsIcon sx={{ fontSize: 20 }} />
+              <LayoutGrid size={22} strokeWidth={1.5} />
             </IconButton>
           </Tooltip>
 
-          <Box>
-            <IconButton 
-              onClick={handleProfileClick}
+          <IconButton 
+            onClick={(e) => setAnchorElAccount(e.currentTarget)}
+            sx={{ 
+              p: 0.5,
+              '&:hover': { transform: 'scale(1.05)' },
+              transition: 'transform 0.2s'
+            }}
+          >
+            <Avatar 
               sx={{ 
-                p: 0.5,
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                borderRadius: '12px',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(0, 240, 255, 0.2)' } 
+                width: 38, 
+                height: 38, 
+                bgcolor: '#00F5FF',
+                fontSize: '0.875rem',
+                fontWeight: 800,
+                color: '#000',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px'
               }}
             >
-              <Avatar 
-                src={profileUrl || undefined}
-                sx={{ 
-                  width: 32, 
-                  height: 32, 
-                  bgcolor: 'rgba(0, 240, 255, 0.1)',
-                  color: '#00F5FF',
-                  fontSize: '0.85rem',
-                  fontWeight: 800,
-                  borderRadius: '10px'
-                }}
-              >
-                {user?.name ? user.name[0].toUpperCase() : 'U'}
-              </Avatar>
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleCloseMenu}
-              PaperProps={{
-                sx: {
-                  mt: 1.5,
-                  minWidth: 240,
-                  bgcolor: 'rgba(10, 10, 10, 0.95)',
-                  backdropFilter: 'blur(25px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '20px',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-                  backgroundImage: 'none',
-                  color: 'white'
-                }
-              }}
-              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            >
-              <Box sx={{ px: 2.5, py: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar 
-                  src={profileUrl || undefined}
-                  sx={{ 
-                    width: 40, 
-                    height: 40, 
-                    bgcolor: 'primary.main',
-                    color: '#000',
-                    borderRadius: '12px',
-                    fontWeight: 900
-                  }}
-                >
-                  {user?.name ? user.name[0].toUpperCase() : 'U'}
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'white', noWrap: true }}>
-                    {user?.name || user?.email}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.4)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {user?.email}
-                  </Typography>
-                </Box>
-              </Box>
-              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
-              <MenuItem 
-                component="a" 
-                href={`https://${process.env.NEXT_PUBLIC_AUTH_SUBDOMAIN || 'id'}.${process.env.NEXT_PUBLIC_DOMAIN || 'whisperrnote.space'}/settings?source=${encodeURIComponent(window.location.origin)}`}
-                onClick={handleCloseMenu} 
-                sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-              >
-                <SettingsIcon sx={{ fontSize: 18, color: "rgba(255, 255, 255, 0.6)" }} />
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>Account Settings</Typography>
-              </MenuItem>
-              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
-              <MenuItem
-                onClick={async () => {
-                  handleCloseMenu();
-                  await logout();
-                }}
-                sx={{ py: 1.5, px: 2.5, gap: 1.5, color: '#FF4D4D' }}
-              >
-                <LogoutIcon sx={{ fontSize: 18 }} />
-                <Typography variant="body2" sx={{ fontWeight: 700 }}>Logout</Typography>
-              </MenuItem>
-            </Menu>
-
-            {/* Notifications Menu */}
-            <Menu
-              anchorEl={anchorElNotifications}
-              open={Boolean(anchorElNotifications)}
-              onClose={() => setAnchorElNotifications(null)}
-              PaperProps={{
-                sx: {
-                  mt: 1.5,
-                  width: 320,
-                  bgcolor: 'rgba(10, 10, 10, 0.95)',
-                  backdropFilter: 'blur(25px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '20px',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-                  backgroundImage: 'none',
-                  color: 'white'
-                }
-              }}
-              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            >
-              <Box sx={{ px: 2.5, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'white' }}>
-                  Intelligence Feed
-                </Typography>
-                {unreadCount > 0 && (
-                  <Typography 
-                    variant="caption" 
-                    onClick={() => { markAllAsRead(); setAnchorElNotifications(null); }}
-                    sx={{ cursor: 'pointer', fontWeight: 800, color: '#00F5FF', '&:hover': { textDecoration: 'underline' } }}
-                  >
-                    MARK ALL READ
-                  </Typography>
-                )}
-              </Box>
-              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
-              <Box sx={{ maxHeight: 360, overflowY: 'auto' }}>
-                {notifications.length === 0 ? (
-                  <Box sx={{ p: 4, textAlign: 'center' }}>
-                    <ClockIcon size={24} color="rgba(255, 255, 255, 0.1)" style={{ marginBottom: 12, marginLeft: 'auto', marginRight: 'auto' }} />
-                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.4)', fontWeight: 600, display: 'block' }}>
-                      No recent activity detected
-                    </Typography>
-                  </Box>
-                ) : (
-                  notifications.slice(0, 10).map((notif) => {
-                    const isRead = !!localStorage.getItem(`read_notif_${notif.$id}`);
-                    return (
-                      <MenuItem 
-                        key={notif.$id} 
-                        onClick={() => { markAsRead(notif.$id); setAnchorElNotifications(null); }}
-                        sx={{ 
-                          py: 1.5, 
-                          px: 2.5, 
-                          gap: 2,
-                          borderLeft: isRead ? 'none' : '3px solid #00F5FF',
-                          bgcolor: isRead ? 'transparent' : alpha('#00F5FF', 0.03),
-                          '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } 
-                        }}
-                      >
-                        <Box sx={{ 
-                          width: 32, 
-                          height: 32, 
-                          borderRadius: '8px', 
-                          bgcolor: 'rgba(255, 255, 255, 0.03)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0
-                        }}>
-                          {notif.action.toLowerCase().includes('delete') ? (
-                            <XCircleIcon size={16} color="#FF4D4D" />
-                          ) : (
-                            <CheckCircleIcon size={16} color="#00F5FF" />
-                          )}
-                        </Box>
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography variant="caption" sx={{ fontWeight: 800, color: 'white', display: 'block', lineHeight: 1.2 }}>
-                            {notif.action.toUpperCase()}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.7rem', display: 'block', noWrap: true, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {notif.targetType}: {notif.details || notif.targetId}
-                          </Typography>
-                        </Box>
-                      </MenuItem>
-                    );
-                  })
-                )}
-              </Box>
-              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
-              <MenuItem sx={{ py: 1.5, justifyContent: 'center' }}>
-                <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', letterSpacing: '0.05em' }}>
-                  VIEW ALL ACTIVITY
-                </Typography>
-              </MenuItem>
-            </Menu>
-          </Box>
+              {user?.name ? user.name[0].toUpperCase() : 'U'}
+            </Avatar>
+          </IconButton>
         </Box>
+
+        {/* Account Menu */}
+        <Menu
+          anchorEl={anchorElAccount}
+          open={Boolean(anchorElAccount)}
+          onClose={() => setAnchorElAccount(null)}
+          PaperProps={{
+            sx: {
+              mt: 1.5,
+              width: 280,
+              bgcolor: 'rgba(10, 10, 10, 0.95)',
+              backdropFilter: 'blur(25px) saturate(180%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '24px',
+              backgroundImage: 'none',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+              overflow: 'hidden'
+            }
+          }}
+        >
+          <Box sx={{ px: 3, py: 2.5, bgcolor: 'rgba(255, 255, 255, 0.02)' }}>
+            <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Account Identity
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 700, color: 'white', mt: 0.5, opacity: 0.9 }}>
+              {user?.email}
+            </Typography>
+          </Box>
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
+          <Box sx={{ py: 1 }}>
+            <MenuItem 
+              onClick={() => {
+                window.location.href = `https://${process.env.NEXT_PUBLIC_AUTH_SUBDOMAIN || 'id'}.${process.env.NEXT_PUBLIC_DOMAIN || 'whisperrnote.space'}/settings?source=${encodeURIComponent(window.location.origin)}`;
+                setAnchorElAccount(null);
+              }}
+              sx={{ py: 1.5, px: 3, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}
+            >
+              <ListItemIcon><Settings size={18} strokeWidth={1.5} color="rgba(255, 255, 255, 0.4)" /></ListItemIcon>
+              <ListItemText primary="Settings" primaryTypographyProps={{ variant: 'caption', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'white' }} />
+            </MenuItem>
+            <MenuItem 
+              onClick={() => {
+                setAnchorElAccount(null);
+              }}
+              sx={{ py: 1.5, px: 3, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}
+            >
+              <ListItemIcon><Download size={18} strokeWidth={1.5} color="rgba(255, 255, 255, 0.4)" /></ListItemIcon>
+              <ListItemText primary="Export Data" primaryTypographyProps={{ variant: 'caption', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'white' }} />
+            </MenuItem>
+          </Box>
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
+          <MenuItem onClick={handleLogout} sx={{ py: 2, px: 3, color: '#FF4D4D', '&:hover': { bgcolor: alpha('#FF4D4D', 0.05) } }}>
+            <ListItemIcon><LogOut size={18} strokeWidth={1.5} color="#FF4D4D" /></ListItemIcon>
+            <ListItemText primary="Sign Out" primaryTypographyProps={{ variant: 'caption', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }} />
+          </MenuItem>
+        </Menu>
+
+        {/* Notifications Menu */}
+        <Menu
+          anchorEl={anchorElNotifications}
+          open={Boolean(anchorElNotifications)}
+          onClose={() => setAnchorElNotifications(null)}
+          PaperProps={{
+            sx: {
+              mt: 1.5,
+              width: 360,
+              bgcolor: 'rgba(10, 10, 10, 0.95)',
+              backdropFilter: 'blur(25px) saturate(180%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '24px',
+              backgroundImage: 'none',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+              overflow: 'hidden'
+            }
+          }}
+        >
+          <Box sx={{ px: 3, py: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'rgba(255, 255, 255, 0.02)' }}>
+            <Typography variant="caption" sx={{ fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Intelligence Feed
+            </Typography>
+            {unreadCount > 0 && (
+              <Typography 
+                variant="caption" 
+                onClick={() => { markAllAsRead(); setAnchorElNotifications(null); }}
+                sx={{ cursor: 'pointer', fontWeight: 800, color: '#00F5FF', '&:hover': { textDecoration: 'underline' } }}
+              >
+                MARK ALL READ
+              </Typography>
+            )}
+          </Box>
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
+          <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+            {notifications.length === 0 ? (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Clock size={32} color="rgba(255, 255, 255, 0.1)" style={{ marginBottom: 12, marginLeft: 'auto', marginRight: 'auto' }} />
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.4)', fontWeight: 600 }}>
+                  No recent activity detected
+                </Typography>
+              </Box>
+            ) : (
+              notifications.slice(0, 10).map((notif) => {
+                const detailsParsed = (() => {
+                  try { return JSON.parse(notif.details || '{}'); } catch { return { read: false }; }
+                })();
+                const isRead = detailsParsed.read;
+                return (
+                  <MenuItem 
+                    key={notif.$id} 
+                    onClick={() => { markAsRead(notif.$id); setAnchorElNotifications(null); }}
+                    sx={{ 
+                      py: 2, 
+                      px: 3, 
+                      gap: 2,
+                      borderLeft: isRead ? 'none' : '3px solid #00F5FF',
+                      bgcolor: isRead ? 'transparent' : alpha('#00F5FF', 0.03),
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } 
+                    }}
+                  >
+                    <Box sx={{ 
+                      width: 40, 
+                      height: 40, 
+                      borderRadius: '12px', 
+                      bgcolor: 'rgba(255, 255, 255, 0.03)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      {notif.action.toLowerCase().includes('delete') ? (
+                        <XCircle size={20} color="#FF4D4D" />
+                      ) : (
+                        <CheckCircle size={20} color="#00F5FF" />
+                      )}
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: 'white', display: 'block' }}>
+                        {notif.action.toUpperCase()}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', noWrap: true, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {notif.targetType}: {notif.targetId}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                );
+              })
+            )}
+          </Box>
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
+          <MenuItem sx={{ py: 2, justifyContent: 'center' }}>
+            <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', letterSpacing: '0.05em' }}>
+              VIEW ALL ACTIVITY
+            </Typography>
+          </MenuItem>
+        </Menu>
+
+        <EcosystemPortal 
+          open={isEcosystemPortalOpen} 
+          onClose={() => setIsEcosystemPortalOpen(false)} 
+        />
       </Toolbar>
-      <EcosystemPortal 
-        open={isEcosystemPortalOpen} 
-        onClose={() => setIsEcosystemPortalOpen(false)} 
-      />
     </AppBar>
   );
 }
