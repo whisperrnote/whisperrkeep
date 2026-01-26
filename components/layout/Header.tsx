@@ -316,7 +316,9 @@ export function Header({ onMenuClick }: HeaderProps) {
           <Box sx={{ py: 1 }}>
             <MenuItem 
               onClick={() => {
-                window.location.href = `https://${process.env.NEXT_PUBLIC_AUTH_SUBDOMAIN || 'id'}.${process.env.NEXT_PUBLIC_DOMAIN || 'whisperrnote.space'}/settings?source=${encodeURIComponent(window.location.origin)}`;
+                const domain = process.env.NEXT_PUBLIC_DOMAIN || 'whisperrnote.space';
+                const idSubdomain = process.env.NEXT_PUBLIC_AUTH_SUBDOMAIN || 'id';
+                window.location.href = `https://${idSubdomain}.${domain}/settings?source=${encodeURIComponent(window.location.origin)}`;
                 setAnchorElAccount(null);
               }}
               sx={{ py: 1.5, px: 3, '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}
